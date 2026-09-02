@@ -1,0 +1,46 @@
+{
+  "title": "a birthday note",
+  "sections": [
+    {
+      "id": "opening",
+      "heading": null,
+      "lines": [
+        "happy birthday to you!"
+      ]
+    },
+    {
+      "id": "today",
+      "heading": "for today",
+      "lines": [
+        "I hope today is filled with all the little things that make you smile — the good coffee, the song that comes on at exactly the right moment, the message from someone you were just thinking about.",
+        "you deserve so much joy, love, and happiness. not just today, but the whole year ahead of it."
+      ]
+    },
+    {
+      "id": "thank-you",
+      "heading": "thank you",
+      "lines": [
+        "thank you for being you.",
+        "for the way you listen properly instead of waiting to talk. for remembering the small things nobody else remembers. for showing up, again and again, even when it would have been easier not to.",
+        "you mean a lot. more than gets said out loud often enough."
+      ]
+    },
+    {
+      "id": "this-year",
+      "heading": "this year",
+      "lines": [
+        "here's to a year that is kind to you.",
+        "to plans that actually happen, and to the good afternoons that were never planned at all. to feeling proud of yourself for something. to rest when you need it and not feeling guilty about taking it.",
+        "and to more moments where you catch yourself thinking — this is nice, I'm glad I'm here."
+      ]
+    },
+    {
+      "id": "close",
+      "heading": null,
+      "lines": [
+        "have the best day ever!",
+        "love you lots ♥"
+      ]
+    }
+  ]
+}

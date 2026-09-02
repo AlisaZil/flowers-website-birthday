@@ -1,0 +1,458 @@
+/* ------------------------------------------------------------------
+   Flower birthday card — cover screen
+   Everything is laid out on a fixed 886 x 1536 design stage and then
+   scaled uniformly to the viewport, so proportions never drift.
+   ------------------------------------------------------------------ */
+
+:root {
+  /* the artwork's own coordinate system */
+  --stage-w: 886;
+  --stage-h: 1536;
+  --s: 1;            /* content scale, set from JS */
+
+  --ink:        #7B2B2C;   /* handwriting maroon */
+  --ink-soft:   #8C3A38;
+  --paper:      #FBF2E2;
+  --petal:      #FCB4C0;
+  --petal-deep: #F4849C;
+  --petal-mid:  #F2799A;
+  --blush:      #F7A3B6;
+  --leaf:       #5C8A5E;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  /* the prompt is an anchor to the letter below */
+  scroll-behavior: smooth;
+}
+
+html, body {
+  margin: 0;
+  background: #FAE7E7;    /* the same cream the loading screen sits on */
+  overflow-x: hidden;
+}
+
+/* nothing scrolls until the artwork is in */
+body.loading { overflow: hidden; }
+
+/* the note is a separate view, not a panel below — the flowers stand
+   down entirely while it is up */
+body.on-note .viewport { display: none; }
+
+/* The bed fades up once the sprites are in. Guarded on .js so the page
+   is never left invisible if the script fails to run. */
+.js .bed-baked,
+.js .bed {
+  opacity: 0;
+  transform: scale(1.025);
+  transition: opacity .95s ease,
+              transform 1.15s cubic-bezier(.25, .8, .35, 1);
+}
+
+/* the live blooms come up just behind the painted ones */
+.js .bed { transition-delay: .12s; }
+
+.js .card { opacity: 0; transition: opacity .7s ease .45s; }
+
+body.ready .bed-baked,
+body.ready .bed { opacity: 1; transform: none; }
+
+body.ready .card { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  /* panels stack down the page and size themselves; centring here would
+     shrink-wrap them instead of letting them span the window */
+  display: block;
+  font-family: 'Caveat', 'Patrick Hand', 'Bradley Hand', 'Segoe Print', cursive;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.viewport {
+  /* the first panel of a continuous page, not an overlay */
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  /* the flowers fade up out of this, straight from the loading screen */
+  background: #FAE7E7;
+}
+
+/* --- the stage ------------------------------------------------------ */
+
+.stage {
+  /* the stage fills the window; the note and the prompt are anchored
+     to the viewport and scaled by --s, so the bed can run edge to edge */
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  z-index: 1;
+  background: none;
+  user-select: none;
+  outline: none;
+}
+
+.stage:focus-visible { outline: 3px solid rgba(255,255,255,.75); outline-offset: 6px; }
+
+/* --- the flower bed ------------------------------------------------- */
+
+.bed, .bed-front {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* keep each bloom's z-index inside its own layer */
+  isolation: isolate;
+}
+
+.bed-baked {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+.bed       { z-index: 1; }   /* the live blooms, above the baked ones */
+.bed-front { z-index: 30; }  /* inside the card, in front of the note */
+
+.bloom {
+  position: absolute;
+  transform-origin: 50% 50%;
+  /* the ease a bloom opens and closes on as the pointer passes */
+  transition: transform .42s cubic-bezier(.25, .8, .35, 1);
+}
+
+/* promoted only while it is actually moving */
+.bloom.swell { will-change: transform; }
+
+/* only the blooms that actually move get promoted, and only while
+   they are moving — see open() in script.js */
+.bloom.lift {
+  will-change: transform;
+  transition: transform 1.35s cubic-bezier(.22, .9, .3, 1);
+}
+
+.bloom img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* the per-bloom filter, including its shadow, is set inline in makeBloom */
+}
+
+/* --- the note ------------------------------------------------------- */
+
+.card {
+  position: absolute;
+  left: 50%;
+  top: 40%;                 /* where the note sits in the artwork */
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%) scale(var(--s));
+  transform-origin: 50% 50%;
+  z-index: 20;
+}
+
+.note {
+  position: absolute;
+  z-index: 20;
+  left: -226px;             /* half of 452 */
+  top: -160px;              /* half of 320 */
+  width: 452px;
+  height: 320px;
+  transform: rotate(-6.2deg);
+  transform-origin: 50% 50%;
+  transition: transform 1.4s cubic-bezier(.22, .9, .3, 1);
+  cursor: pointer;
+  outline: none;
+  filter:
+    drop-shadow(0 10px 18px rgba(158, 45, 76, .30))
+    drop-shadow(0 2px 4px rgba(158, 45, 76, .18));
+}
+
+.note-paper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* the source sheet is a touch taller than the card in the artwork */
+  object-fit: fill;
+}
+
+.girl {
+  position: absolute;
+  z-index: 2;
+  width: 84px;
+  height: auto;
+  top: 30px;
+  right: 48px;
+}
+
+/* a small lift, so the card reads as something you can press */
+.note:hover,
+.note:focus-visible {
+  transition: transform .45s cubic-bezier(.25, .8, .35, 1);
+  transform: rotate(-6.2deg) scale(1.035);
+}
+
+.note:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .9);
+  border-radius: 4px;
+}
+
+/* handwriting ------------------------------------------------------- */
+
+.greeting {
+  position: absolute;
+  z-index: 2;
+  inset: 40px 44px 34px 52px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--ink);
+  font-size: 62px;
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-align: center;
+}
+
+.greeting span { display: block; }
+.l1 { margin-left: -10px; }
+.l2 { margin-left: 12px; }
+.l3 { margin-left: 30px; }
+
+/* decorations inside the note --------------------------------------- */
+
+.deco {
+  position: absolute;
+  z-index: 2;
+  transform: rotate(var(--rot, 0deg));
+}
+
+.deco path,
+.deco .petals ellipse { fill: var(--blush); }
+.deco .pistil { fill: #F06F92; }
+
+.heart-1 { width: 30px; left: 62px;  top: 84px; }
+.heart-2 { width: 27px; right: 44px; bottom: 62px; }
+.bloom-1 { width: 33px; right: 62px; top: 122px; }
+.bloom-2 { width: 33px; left: 60px;  bottom: 66px; }
+
+/* --- tap to open ----------------------------------------------------- */
+
+body.opening .note {
+  transform: translateY(5%) rotate(-2.4deg) scale(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bloom,
+  .bloom.lift,
+  .note,
+  .js .bed-baked,
+  .js .bed,
+  .js .card { transition-duration: .01ms; }
+}
+
+/* ------------------------------------------------------------------
+   Loading screen. The bed pulls in a dozen full-size watercolour
+   sprites, so this holds the door shut until they are all decoded.
+   ------------------------------------------------------------------ */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #FAE7E7;
+  transition: opacity .55s ease;
+}
+
+.loader.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+}
+
+/* the girl, with a little bloom beside her */
+.loader-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: clamp(20px, 4vmin, 42px);
+}
+
+.loader-girl {
+  width: clamp(130px, 23vmin, 230px);
+  height: auto;
+  display: block;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+
+.loader-girl.ready { opacity: 1; }
+
+.loader-bloom {
+  width: clamp(20px, 3.4vmin, 34px);
+  height: auto;
+  margin-left: clamp(6px, 1.4vmin, 14px);
+  align-self: center;
+}
+
+.loader-bloom ellipse { fill: #F58CA3; }
+.loader-bloom .pistil { fill: #EE6E8C; }
+
+.loader-title,
+.loader-note {
+  margin: 0;
+  color: #8A4B45;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.loader-title { font-size: clamp(22px, 4.2vmin, 40px); }
+
+.loader-note {
+  font-size: clamp(18px, 3.4vmin, 32px);
+  margin-top: clamp(14px, 2.6vmin, 26px);
+}
+
+/* the bar */
+.loader-track {
+  width: clamp(240px, 46vmin, 480px);
+  height: clamp(16px, 2.4vmin, 26px);
+  margin-top: clamp(16px, 3vmin, 30px);
+  border: 2px solid #F3A2B0;
+  border-radius: 999px;
+  background: #FCE3E6;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.loader-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #F08497, #F49AA9);
+  transition: width .35s cubic-bezier(.3, .8, .4, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader,
+  .loader-fill,
+  .loader-girl { transition-duration: .01ms; }
+}
+
+
+/* ------------------------------------------------------------------
+   The veil. Fades over the flowers, the letter takes their place
+   behind it, then it lifts — so the two panels cross-fade instead of
+   sliding past each other.
+   ------------------------------------------------------------------ */
+
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: #FFF8F8;   /* the note's pre-wash tint, so the hand-over is seamless */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+
+.veil.on {
+  opacity: 1;
+  pointer-events: auto;   /* swallow clicks mid-transition */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .veil { transition-duration: .01ms; }
+}
+
+/* ------------------------------------------------------------------
+   The nudge. Sits just under the card, pointing back up at it, and
+   fades in a moment after the flowers have settled.
+   ------------------------------------------------------------------ */
+
+.hint {
+  position: absolute;
+  z-index: 40;                 /* above the blooms in front of the note */
+  left: 6px;                   /* the card's centre is the origin */
+  top: 158px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .8s ease;
+  isolation: isolate;          /* keeps the glow behind its own content */
+}
+
+.hint.show { opacity: 1; }
+
+/* a soft white wash so the words read against the flowers */
+.hint::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 372px;
+  height: 216px;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 255, 255, .95) 0%,
+    rgba(255, 253, 253, .88) 28%,
+    rgba(255, 250, 251, .55) 50%,
+    rgba(255, 248, 250, .22) 70%,
+    rgba(255, 248, 250, 0) 86%);
+  filter: blur(3px);
+}
+
+.hint-arrow {
+  width: 64px;
+  height: auto;
+  flex: none;
+  filter: drop-shadow(0 1px 5px rgba(255, 255, 255, .9));
+}
+
+.hint-arrow path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hint-text {
+  color: var(--ink);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  padding-bottom: 5px;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, .9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint { transition-duration: .01ms; }
+}

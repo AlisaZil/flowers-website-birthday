@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="note.css">
+</head>
+<body>
+
+<!-- shown until the flower artwork has finished downloading -->
+<div class="loader" id="loader">
+  <div class="loader-inner">
+    <div class="loader-art">
+      <img class="loader-girl" id="loaderGirl" src="assets/girl.png" alt="" draggable="false">
+      <svg class="loader-bloom" viewBox="0 0 34 34" aria-hidden="true">
+        <g>
+          <ellipse cx="17" cy="6.6" rx="5.6" ry="6.1"/>
+          <ellipse cx="27" cy="13.7" rx="5.6" ry="6.1" transform="rotate(72 27 13.7)"/>
+          <ellipse cx="23.2" cy="25.6" rx="5.6" ry="6.1" transform="rotate(144 23.2 25.6)"/>
+          <ellipse cx="10.8" cy="25.6" rx="5.6" ry="6.1" transform="rotate(216 10.8 25.6)"/>
+          <ellipse cx="7" cy="13.7" rx="5.6" ry="6.1" transform="rotate(288 7 13.7)"/>
+        </g>
+        <circle class="pistil" cx="17" cy="17" r="3.4"/>
+      </svg>
+    </div>
+
+    <p class="loader-title">Preparing something special...</p>
+
+    <div class="loader-track" role="progressbar" aria-label="Loading"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="loaderBar">
+      <div class="loader-fill" id="loaderFill"></div>
+    </div>
+
+    <p class="loader-note">Loading...</p>
+  </div>
+</div>
+
+<!-- covers the screen while the letter takes its place -->
+<div class="veil" id="veil"></div>
+
+<div class="viewport">
+  <!-- the buried blooms, flattened into a single painted layer -->
+  <canvas class="bed-baked" id="bedBaked"></canvas>
+
+  <!-- the blooms that stay live, so they can open under the pointer -->
+  <div class="bed" id="bed"></div>
+
+  <main class="stage" id="stage">
+
+    <!-- The card: the note, plus the blooms tucked in front of it.
+         Everything inside is positioned around the note's centre. -->
+    <div class="card" id="card">
+
+    <div class="note" id="note" role="button" tabindex="0"
+         aria-label="Open the letter">
+      <img class="note-paper" src="assets/note-blank.png" alt="" draggable="false">
+
+      <img class="girl" src="assets/girl.png" alt="" draggable="false">
+
+      <!-- pink heart, upper left of the greeting -->
+      <svg class="deco heart-1" style="--rot:-8deg" viewBox="0 0 32 29" aria-hidden="true">
+        <path d="M16 28C16 28 1.5 19.6 1.5 9.9 1.5 4.9 5.3 1.5 9.6 1.5c2.8 0 5.1 1.5 6.4 3.8C17.3 3 19.6 1.5 22.4 1.5c4.3 0 8.1 3.4 8.1 8.4C30.5 19.6 16 28 16 28Z"/>
+      </svg>
+
+      <!-- little five petal flower, right of "Birthday," -->
+      <svg class="deco bloom-1" style="--rot:12deg" viewBox="0 0 34 34" aria-hidden="true">
+        <g class="petals">
+          <ellipse cx="17" cy="6.6" rx="5.6" ry="6.1"/>
+          <ellipse cx="27" cy="13.7" rx="5.6" ry="6.1" transform="rotate(72 27 13.7)"/>
+          <ellipse cx="23.2" cy="25.6" rx="5.6" ry="6.1" transform="rotate(144 23.2 25.6)"/>
+          <ellipse cx="10.8" cy="25.6" rx="5.6" ry="6.1" transform="rotate(216 10.8 25.6)"/>
+          <ellipse cx="7" cy="13.7" rx="5.6" ry="6.1" transform="rotate(288 7 13.7)"/>
+        </g>
+        <circle class="pistil" cx="17" cy="17" r="3.4"/>
+      </svg>
+
+      <!-- little five petal flower, left of the name -->
+      <svg class="deco bloom-2" style="--rot:-14deg" viewBox="0 0 34 34" aria-hidden="true">
+        <g class="petals">
+          <ellipse cx="17" cy="6.6" rx="5.6" ry="6.1"/>
+          <ellipse cx="27" cy="13.7" rx="5.6" ry="6.1" transform="rotate(72 27 13.7)"/>
+          <ellipse cx="23.2" cy="25.6" rx="5.6" ry="6.1" transform="rotate(144 23.2 25.6)"/>
+          <ellipse cx="10.8" cy="25.6" rx="5.6" ry="6.1" transform="rotate(216 10.8 25.6)"/>
+          <ellipse cx="7" cy="13.7" rx="5.6" ry="6.1" transform="rotate(288 7 13.7)"/>
+        </g>
+        <circle class="pistil" cx="17" cy="17" r="3.4"/>
+      </svg>
+
+      <!-- pink heart, right of the name -->
+      <svg class="deco heart-2" style="--rot:9deg" viewBox="0 0 32 29" aria-hidden="true">
+        <path d="M16 28C16 28 1.5 19.6 1.5 9.9 1.5 4.9 5.3 1.5 9.6 1.5c2.8 0 5.1 1.5 6.4 3.8C17.3 3 19.6 1.5 22.4 1.5c4.3 0 8.1 3.4 8.1 8.4C30.5 19.6 16 28 16 28Z"/>
+      </svg>
+
+      <p class="greeting">
+        <span class="l1">Happy</span>
+        <span class="l2">Birthday,</span>
+        <span class="l3" id="name">Sonia</span>
+      </p>
+    </div>
+
+
+      <!-- nudge towards the card, a moment after the flowers settle -->
+      <div class="hint" id="hint" aria-hidden="true">
+        <svg class="hint-arrow" viewBox="0 0 76 88">
+          <path class="curve" d="M68 84 C63 54 52 26 17 11"/>
+          <path class="head" d="M17 11 L32 13 M17 11 L22 27"/>
+        </svg>
+        <span class="hint-text">click me!</span>
+      </div>
+
+      <!-- blooms that sit in front of the note -->
+      <div class="bed-front" id="bedFront"></div>
+    </div>
+
+
+
+  </main>
+</div>
+
+
+  
+
+
+
+<main class="note-page" id="page">
+  <div class="sheet">
+
+    <header class="sheet-head">
+      <h1 class="sheet-title" id="noteTitle">a birthday note</h1>
+
+      <img class="sheet-girl" src="assets/girl.png" alt="" draggable="false">
+
+      <svg class="sheet-sprig" viewBox="0 0 40 40" aria-hidden="true">
+        <g class="petals">
+          <ellipse cx="20" cy="9"  rx="6" ry="7"/>
+          <ellipse cx="30" cy="16" rx="6" ry="7" transform="rotate(72 30 16)"/>
+          <ellipse cx="26" cy="28" rx="6" ry="7" transform="rotate(144 26 28)"/>
+          <ellipse cx="14" cy="28" rx="6" ry="7" transform="rotate(216 14 28)"/>
+          <ellipse cx="10" cy="16" rx="6" ry="7" transform="rotate(288 10 16)"/>
+        </g>
+        <circle class="eye" cx="20" cy="19" r="2.6"/>
+      </svg>
+
+      <div class="sheet-rule" aria-hidden="true">
+        <span class="dash"></span>
+        <svg class="rule-heart" viewBox="0 0 32 29"><use href="#hrt"/></svg>
+        <span class="dash"></span>
+      </div>
+    </header>
+
+    <div class="note-box">
+      <svg class="note-frame" viewBox="0 0 400 400" preserveAspectRatio="none" aria-hidden="true">
+        <rect x="4" y="4" width="392" height="392" rx="9" ry="9"
+              filter="url(#wobble)" vector-effect="non-scaling-stroke"/>
+      </svg>
+
+      <!-- sections are rendered from note.json -->
+      <div class="note-scroll" id="noteScroll" tabindex="0">
+        <div class="note-text" id="noteText"></div>
+      </div>
+    </div>
+
+    <svg class="sheet-flowers" viewBox="0 0 118 172" aria-hidden="true">
+      <g class="stems">
+        <path d="M74 34 C74 76 62 104 55 168"/>
+        <path d="M30 68 C34 100 47 122 55 168"/>
+        <path d="M62 96 C74 88 86 88 95 94 C84 102 70 104 62 96Z" class="leaf"/>
+        <path d="M46 122 C36 114 24 113 15 118 C25 127 39 129 46 122Z" class="leaf"/>
+      </g>
+      <g class="petals">
+        <ellipse cx="74" cy="18" rx="10" ry="11.5"/>
+        <ellipse cx="90" cy="29" rx="10" ry="11.5" transform="rotate(72 90 29)"/>
+        <ellipse cx="84" cy="48" rx="10" ry="11.5" transform="rotate(144 84 48)"/>
+        <ellipse cx="64" cy="48" rx="10" ry="11.5" transform="rotate(216 64 48)"/>
+        <ellipse cx="58" cy="29" rx="10" ry="11.5" transform="rotate(288 58 29)"/>
+      </g>
+      <circle class="eye" cx="74" cy="34" r="4.4"/>
+      <g class="petals">
+        <ellipse cx="30" cy="54" rx="8" ry="9.2"/>
+        <ellipse cx="43" cy="63" rx="8" ry="9.2" transform="rotate(72 43 63)"/>
+        <ellipse cx="38" cy="78" rx="8" ry="9.2" transform="rotate(144 38 78)"/>
+        <ellipse cx="22" cy="78" rx="8" ry="9.2" transform="rotate(216 22 78)"/>
+        <ellipse cx="17" cy="63" rx="8" ry="9.2" transform="rotate(288 17 63)"/>
+      </g>
+      <circle class="eye" cx="30" cy="68" r="3.5"/>
+    </svg>
+
+    <div class="sheet-doodles" aria-hidden="true">
+      <svg class="hrt" style="--d:1.50s; --x:2.5%; --y:36%; --sz:24px; --r:-10deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.58s; --x:97.5%;--y:49%; --sz:26px; --r:12deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.66s; --x:96.5%;--y:74%; --sz:17px; --r:-6deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.74s; --x:4%;   --y:92%; --sz:21px; --r:8deg"><use href="#hrt"/></svg>
+
+      <span class="pip" style="--d:1.54s; --x:4.5%; --y:42%; --sz:7px"></span>
+      <span class="pip" style="--d:1.62s; --x:2.5%; --y:46%; --sz:6px"></span>
+      <span class="pip" style="--d:1.70s; --x:3%;   --y:66%; --sz:6px"></span>
+      <span class="pip" style="--d:1.78s; --x:5%;   --y:94%; --sz:6px"></span>
+      <span class="pip" style="--d:1.86s; --x:96%;  --y:41%; --sz:7px"></span>
+      <span class="pip" style="--d:1.94s; --x:96.5%;--y:64%; --sz:6px"></span>
+      <span class="pip" style="--d:2.02s; --x:95.5%;--y:88%; --sz:6px"></span>
+    </div>
+
+  </div>
+
+  <a class="back" href="index.html" id="back">
+    <svg class="back-arrow" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 16.5 L8 2 M2 8 L8 1.5 L14 8"/></svg>back to the flowers</a>
+</main>
+
+<!-- shared bits: the heart outline and the hand-drawn wobble -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="hrt" viewBox="0 0 32 29">
+    <path d="M16 27.5C16 27.5 2 19.4 2 10.2 2 5.5 5.6 2.2 9.7 2.2c2.7 0 4.9 1.4 6.3 3.6 1.4-2.2 3.6-3.6 6.3-3.6 4.1 0 7.7 3.3 7.7 8C30 19.4 16 27.5 16 27.5Z"
+          fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+  </symbol>
+  <filter id="wobble">
+    <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<script src="script.js"></script>
+</body>
+</html>

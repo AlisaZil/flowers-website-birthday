@@ -1,0 +1,369 @@
+/* ------------------------------------------------------------------
+   The birthday note — its own page.
+   ------------------------------------------------------------------ */
+
+
+
+.note-page {
+  --page:    #FDF0F0;   /* the sheet's soft pink ground */
+  --box:     #FBE4E7;   /* the writing panel, a shade deeper */
+  --line:    #F2B6C2;   /* its hand-drawn edge */
+  --ink:     #7B4A45;   /* the writing */
+  --accent:  #F79FB0;   /* hearts and dots */
+  --petal:   #F58BA3;
+  --leaf:    #A9C29B;
+  --gutter:  clamp(14px, 5.5vmin, 68px);   /* margin the doodles live in */
+  --page-pre: #FFF8F8;  /* what the ground washes in from */
+
+  position: fixed;
+  inset: 0;
+  display: none;              /* the flowers hold the screen until asked */
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(16px, 3.5vmin, 48px);
+  background: var(--page-pre);
+  font-family: 'Gaegu', 'Nanum Gothic Coding', ui-monospace,
+               SFMono-Regular, Menlo, Consolas, monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+.note-page.active { display: grid; }
+
+.note-page * { box-sizing: border-box; }
+
+/* the sheet holds the whole composition at a fixed proportion */
+.sheet {
+  position: relative;
+  width: min(768px, 100%);
+  height: min(1024px, 92dvh);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- heading -------------------------------------------------------- */
+
+.sheet-head {
+  position: relative;
+  padding: clamp(10px, 2.4vmin, 30px) 0 clamp(10px, 2vmin, 22px);
+  text-align: center;
+}
+
+.sheet-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(26px, 5.2vmin, 46px);
+  font-weight: 700;
+  letter-spacing: .1em;
+  line-height: 1.2;
+  /* the girl sits to the right of the words */
+  padding-right: clamp(70px, 15vmin, 140px);
+}
+
+.sheet-girl {
+  position: absolute;
+  right: clamp(24px, 6vmin, 62px);
+  top: 0;
+  width: clamp(66px, 13.5vmin, 122px);
+  height: auto;
+}
+
+.sheet-sprig {
+  position: absolute;
+  right: clamp(2px, 1vmin, 12px);
+  top: clamp(26px, 5.5vmin, 52px);
+  width: clamp(20px, 3.6vmin, 34px);
+  height: auto;
+}
+
+/* line — heart — line */
+.sheet-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.6vmin, 16px);
+  margin-top: clamp(6px, 1.2vmin, 12px);
+  padding-right: clamp(70px, 15vmin, 140px);
+}
+
+.sheet-rule .dash {
+  width: clamp(40px, 8vmin, 76px);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.rule-heart {
+  width: clamp(14px, 2.4vmin, 22px);
+  height: auto;
+  color: var(--accent);
+}
+
+/* --- the writing panel ---------------------------------------------- */
+
+.note-box {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 var(--gutter);
+  overflow: hidden;
+}
+
+/* the long note lives in here and scrolls on its own */
+.note-scroll {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(22px, 4.2vmin, 46px) clamp(20px, 4vmin, 44px);
+  outline: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  /* softens the text where it runs past the top and bottom edges */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0, #000 26px, #000 calc(100% - 30px), transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0, #000 26px, #000 calc(100% - 30px), transparent 100%);
+}
+
+.note-scroll:focus-visible { box-shadow: inset 0 0 0 2px rgba(242, 182, 194, .8); }
+
+.note-scroll::-webkit-scrollbar { width: 8px; }
+.note-scroll::-webkit-scrollbar-track { background: transparent; }
+.note-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
+/* a stroked rect pushed through a turbulence filter, so the edge reads
+   as drawn by hand rather than ruled */
+.note-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.note-frame rect {
+  fill: var(--box);
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.note-text {
+  position: relative;
+  color: var(--ink);
+  font-size: clamp(15px, 2.5vmin, 25px);
+  letter-spacing: .04em;
+  line-height: 1.7;
+}
+
+.note-section { margin: 0 0 clamp(18px, 3vmin, 34px); }
+.note-section:last-child { margin-bottom: 0; }
+
+.note-heading {
+margin: 0 0 clamp(4px, .8vmin, 10px);
+font-size: 1.06em;
+font-weight: 700;
+color: var(--line);
+letter-spacing: .08em;
+}
+
+.note-line { margin: 0 0 clamp(8px, 1.4vmin, 16px); }
+.note-line:last-child { margin-bottom: 0; }
+
+.heart { color: var(--accent); }
+
+/* --- the blooms at the lower right ---------------------------------- */
+
+.sheet-flowers {
+  position: absolute;
+  right: calc(var(--gutter) + clamp(6px, 1.6vmin, 18px));
+  bottom: clamp(2px, 1vmin, 14px);
+  width: clamp(80px, 14vmin, 132px);
+  height: auto;
+  pointer-events: none;
+}
+
+.sheet-flowers .petals ellipse,
+.sheet-sprig .petals ellipse { fill: var(--petal); }
+
+.sheet-flowers .eye,
+.sheet-sprig .eye { fill: #FFF1F3; }
+
+.sheet-flowers .stems path {
+  fill: none;
+  stroke: var(--leaf);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.sheet-flowers .leaf {
+  fill: var(--leaf);
+  stroke: none;
+}
+
+/* --- hearts and dots ------------------------------------------------- */
+
+.sheet-doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--accent);
+}
+
+.sheet-doodles .hrt,
+.sheet-doodles .pip {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--sz);
+  height: var(--sz);
+}
+
+.sheet-doodles .hrt { transform: translate(-50%, -50%) rotate(var(--r, 0deg)); }
+
+.sheet-doodles .pip {
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 640px) {
+  .sheet-doodles { display: none; }
+}
+
+/* --- back ------------------------------------------------------------ */
+
+.note-page .back {
+  position: absolute;
+  left: clamp(14px, 3vmin, 34px);
+  top: clamp(14px, 3vmin, 34px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--line);
+  font-size: clamp(13px, 1.8vmin, 18px);
+  letter-spacing: .06em;
+  text-decoration: none;
+  opacity: .9;
+}
+
+.note-page .back:hover,
+.note-page .back:focus-visible { opacity: 1; color: var(--accent); }
+
+.note-page .back-arrow {
+  width: 1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ------------------------------------------------------------------
+   Arrival. Staged so the note assembles itself: ground, heading,
+   panel, the message line by line, then the small things.
+   Nothing overshoots.
+   ------------------------------------------------------------------ */
+
+/* the pink ground, washing in over the lighter base */
+.note-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--page);
+  opacity: 0;
+  transition: opacity .5s ease;
+  pointer-events: none;
+}
+
+.note-page.in-view::before { opacity: 1; }
+
+.js .note-page .sheet-head,
+.js .note-page .note-box,
+.js .note-page .note-section,
+.js .note-page .sheet-flowers,
+.js .note-page .sheet-doodles .hrt,
+.js .note-page .sheet-doodles .pip,
+.js .note-page .back { opacity: 0; }
+
+/* heading settles down from a few pixels up */
+.js .note-page .sheet-head {
+  transform: translateY(-8px);
+  transition: opacity .7s ease .3s,
+              transform .7s cubic-bezier(.25, .8, .35, 1) .3s;
+}
+
+/* the panel grows the last fraction into place */
+.js .note-page .note-box {
+  transform: scale(.985);
+  transform-origin: 50% 40%;
+  transition: opacity .8s ease .55s,
+              transform .8s cubic-bezier(.25, .8, .35, 1) .55s;
+}
+
+/* the message, a section at a time — the beat comes from --d, which the
+   renderer stamps on each section as it builds them from the data */
+.js .note-page .note-section {
+  transform: translateY(6px);
+  transition: opacity .5s ease var(--d, .9s),
+              transform .5s cubic-bezier(.25, .8, .35, 1) var(--d, .9s);
+}
+
+/* the small things last, each on its own beat */
+.js .note-page .sheet-flowers {
+  transform: scale(.8);
+  transform-origin: 70% 90%;
+  transition: opacity .45s ease 1.45s,
+              transform .45s cubic-bezier(.25, .8, .35, 1) 1.45s;
+}
+
+.js .note-page .sheet-doodles .hrt {
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg)) scale(.8);
+}
+
+.js .note-page .sheet-doodles .pip {
+  transform: translate(-50%, -50%) scale(.8);
+}
+
+.js .note-page .sheet-doodles .hrt,
+.js .note-page .sheet-doodles .pip {
+  transition: opacity .45s ease var(--d, 1.5s),
+              transform .45s cubic-bezier(.25, .8, .35, 1) var(--d, 1.5s);
+}
+
+/* kept quiet until the note has finished arriving */
+.js .note-page .back { transition: opacity .6s ease 1.95s; }
+
+/* --- the settled state --------------------------------------------- */
+
+.note-page.in-view .sheet-head,
+.note-page.in-view .note-box,
+.note-page.in-view .note-section,
+.note-page.in-view .sheet-flowers,
+.note-page.in-view .back { opacity: 1; transform: none; }
+
+.note-page.in-view .sheet-doodles .hrt {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+}
+
+.note-page.in-view .sheet-doodles .pip {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-page::before,
+  .js .note-page .sheet-head,
+  .js .note-page .note-box,
+  .js .note-page .note-section,
+  .js .note-page .sheet-flowers,
+  .js .note-page .sheet-doodles .hrt,
+  .js .note-page .sheet-doodles .pip,
+  .js .note-page .back {
+    transition-duration: .01ms;
+    transition-delay: 0s;
+  }
+}
