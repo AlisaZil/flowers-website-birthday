@@ -29,7 +29,7 @@ html {
 
 html, body {
   margin: 0;
-  background: #FAE7E7;    /* the same cream the loading screen sits on */
+  background: #fdf1f0;    /* the same cream the loading screen sits on */
   overflow-x: hidden;
 }
 
@@ -45,15 +45,17 @@ body.on-note .viewport { display: none; }
 .js .bed-baked,
 .js .bed {
   opacity: 0;
-  transform: scale(1.025);
-  transition: opacity .95s ease,
-              transform 1.15s cubic-bezier(.25, .8, .35, 1);
+  transform: scale(1.03);
+  /* a long, unhurried arrival — the bed takes its time coming up out of
+     the cream the loading screen left behind */
+  transition: opacity 1.9s ease,
+              transform 2.2s cubic-bezier(.25, .8, .35, 1);
 }
 
 /* the live blooms come up just behind the painted ones */
-.js .bed { transition-delay: .12s; }
+.js .bed { transition-delay: .18s; }
 
-.js .card { opacity: 0; transition: opacity .7s ease .45s; }
+.js .card { opacity: 0; transition: opacity .9s ease 1.2s; }
 
 body.ready .bed-baked,
 body.ready .bed { opacity: 1; transform: none; }

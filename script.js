@@ -30,7 +30,8 @@
      — a touch screen, or someone just sitting still — it appears anyway. */
   var HINT_AFTER_PLAY_MS = 2000;   // after they first make a flower move
   var HINT_FALLBACK_MS   = 6000;   // if a pointer is there but never used
-  var HINT_TOUCH_MS      = 1000;   // phone and tablet: there is no hovering
+  var HINT_TOUCH_MS      = 2600;   // phone and tablet: a beat after the
+                                   // slower bed fade has finished settling
   var MIN_SHOW_MS = 650;    // don't let the loader flash past on a warm cache
   var started     = Date.now();
 
@@ -749,6 +750,7 @@
 
   function closeNote() {
     notePage.classList.remove('active', 'in-view');
+    notePage.scrollTop = 0;      // next visit starts at the note again
     noteBody.classList.remove('on-note');
 
     // put the bed back the way it was and replay its fade
@@ -810,6 +812,9 @@
       fadeToFlowers();
     });
   }
+
+  var backBtn = document.getElementById('backBtn');
+  if (backBtn) backBtn.addEventListener('click', fadeToFlowers);
 
   /* --- the note's words ----------------------------------------------
      Sections come from note.json so the wording can change without
@@ -891,31 +896,31 @@
      never means rearranging the pile. */
 
   var SHOT_LAYOUT = [
-    { x: '26%', y: '26%', w: '17%', r: '-6deg',  ar: '4 / 5',  z: 3 },
-    { x: '45%', y: '22%', w: '18%', r: '3deg',   ar: '3 / 4',  z: 4 },
-    { x: '65%', y: '23%', w: '16.5%', r: '-3deg',  ar: '4 / 5',  z: 5 },
-    { x: '84%', y: '28%', w: '17%', r: '5deg',   ar: '3 / 4',  z: 4 },
-    { x: '18%', y: '50%', w: '18%', r: '2deg',   ar: '3 / 4',  z: 6 },
-    { x: '38%', y: '53%', w: '16.5%', r: '-2deg',  ar: '3 / 4',  z: 7 },
-    { x: '59%', y: '55%', w: '17%', r: '4deg',   ar: '4 / 5',  z: 8 },
-    { x: '80%', y: '53%', w: '17%', r: '-4deg',  ar: '4 / 5',  z: 6 },
-    { x: '33%', y: '76%', w: '18%', r: '-3deg',  ar: '3 / 4',  z: 9 },
-    { x: '55%', y: '79%', w: '16.5%', r: '2deg',   ar: '3 / 4',  z: 10 }
+    { x: '24%', y: '26%', w: '17.5%', r: '-6deg',  ar: '4 / 5',  z: 3 },
+    { x: '45%', y: '22%', w: '18.5%', r: '3deg',   ar: '5 / 4',  z: 4 },
+    { x: '65%', y: '23%', w: '17%', r: '-3deg',  ar: '4 / 5',  z: 5 },
+    { x: '85%', y: '28%', w: '17.5%', r: '5deg',   ar: '5 / 4',  z: 4 },
+    { x: '15%', y: '50%', w: '18.5%', r: '2deg',   ar: '5 / 4',  z: 6 },
+    { x: '38%', y: '53%', w: '17%', r: '-2deg',  ar: '4 / 5',  z: 7 },
+    { x: '59%', y: '55%', w: '17.5%', r: '4deg',   ar: '4 / 5',  z: 8 },
+    { x: '81%', y: '53%', w: '17.5%', r: '-4deg',  ar: '5 / 4',  z: 6 },
+    { x: '33%', y: '76%', w: '18.5%', r: '-3deg',  ar: '5 / 4',  z: 9 },
+    { x: '55%', y: '79%', w: '17%', r: '2deg',   ar: '4 / 5',  z: 10 }
   ];
 
   var GALLERY_FALLBACK = {
     title: 'my favourite moments',
     photos: [
-      { src: 'assets/photos/on-stairs.jpg', alt: 'sitting on the steps', note: 'sat on the steps, laughing about nothing in particular.' },
-      { src: 'assets/photos/coffee.jpg', alt: 'holding an enormous bowl of coffee', note: 'the biggest coffee they had. obviously.' },
-      { src: 'assets/photos/cocktails.jpg', alt: 'two cocktails on a table', note: 'cocktails, and a photo of the photo.' },
-      { src: 'assets/photos/kitttty.jpg', alt: 'a cat peeking over knees', note: 'supervised, as always, by management.' },
-      { src: 'assets/photos/movie.jpg', alt: 'popcorn at the cinema', note: 'movie night, and the whole bucket to yourself.' },
-      { src: 'assets/photos/funny-face.jpg', alt: 'wearing a mask in a shop', note: 'in a shop, wearing a face that was not yours.' },
-      { src: 'assets/photos/horses-face.jpg', alt: 'two horse masks', note: 'no explanation. none needed.' },
-      { src: 'assets/photos/dorm-night.jpg', alt: 'a kitchen and a lot of mess', note: 'we do not talk about what happened to that kitchen.' },
-      { src: 'assets/photos/e897a1f77219ba5e13e5ea77a0f06af0.jpg', alt: 'finishing a dessert', note: 'not leaving a single crumb behind.' },
-      { src: 'assets/photos/omg.jpg', alt: 'a close-up face', note: 'this exact face. every single time.' }
+      { src: 'assets/photos/web/flowers.jpg', alt: 'a bouquet of pink roses', note: 'the flowers you stopped to look at twice.' },
+      { src: 'assets/photos/web/ice-cream.jpg', alt: 'two ice cream cones held up together', note: 'far too hot that afternoon, and we did not care one bit.' },
+      { src: 'assets/photos/web/coffee.jpg', alt: 'a pink iced coffee in the sun', note: 'coffee for happiness. it worked.' },
+      { src: 'assets/photos/web/kItttty.jpg', alt: 'a cat asleep on a pink cushion', note: 'the correct way to spend a sunday.' },
+      { src: 'assets/photos/web/sea.jpg', alt: 'the sea at sunset', note: 'up far too early, and worth every minute of it.' },
+      { src: 'assets/photos/web/building.jpg', alt: 'old balconies at golden hour', note: 'the long walk home, the good kind of tired.' },
+      { src: 'assets/photos/web/pink-bike.jpg', alt: 'a pink bicycle with a basket of flowers', note: 'we said we would come back to this street. we should.' },
+      { src: 'assets/photos/web/tulip.jpg', alt: 'a bunch of pink tulips', note: 'just because it was a tuesday.' },
+      { src: 'assets/photos/web/pancake.jpg', alt: 'pancakes with berries and coffee', note: 'breakfast that turned into lunch.' },
+      { src: 'assets/photos/web/girl.jpg', alt: 'a mirror photo', note: 'this one. exactly this one.' }
     ]
   };
 
@@ -970,8 +975,8 @@
       img.src = photo.src;
       img.alt = photo.alt || '';
       img.loading = 'lazy';
+      img.style.setProperty('--ar', photo.ar || spot.ar);
       img.decoding = 'async';
-      img.style.setProperty('--ar', spot.ar);
 
       btn.appendChild(img);
       btn.addEventListener('click', function () { openShot(photo); });
@@ -994,7 +999,12 @@
      rather than over before you arrive. */
 
   function watchGallery() {
-    var panel = document.getElementById('gallery');
+    revealOnArrival('gallery', 0.22);
+    revealOnArrival('closing', 0.35);
+  }
+
+  function revealOnArrival(id, threshold) {
+    var panel = document.getElementById(id);
     var scroller = document.getElementById('page');
     if (!panel) return;
 
@@ -1006,7 +1016,7 @@
         panel.classList.add('in');
         io.disconnect();
       });
-    }, { root: scroller, threshold: 0.22 });
+    }, { root: scroller, threshold: threshold });
 
     io.observe(panel);
   }
@@ -1038,7 +1048,7 @@
     lightbox.classList.remove('open');
     setTimeout(function () {
       lightbox.hidden = true;
-      lbImg.src = '';
+      lbImg.removeAttribute('src');   // src='' would refetch the page as an image
       if (lastShot && lastShot.focus) lastShot.focus();
     }, 300);
   }
