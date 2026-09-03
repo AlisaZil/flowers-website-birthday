@@ -77,8 +77,12 @@ body {
   /* the first panel of a continuous page, not an overlay */
   position: relative;
   width: 100%;
+  /* lvh is the viewport with the browser chrome retracted, so the flowers
+     carry on behind the status bar and the toolbar instead of stopping at
+     a cream strip. It is also stable while iOS collapses its toolbar,
+     where dvh would reflow the whole bed mid-scroll. */
   height: 100vh;
-  height: 100dvh;
+  height: 100lvh;
   overflow: hidden;
   /* the flowers fade up out of this, straight from the loading screen */
   background: #FAE7E7;
@@ -455,4 +459,33 @@ body.opening .note {
 
 @media (prefers-reduced-motion: reduce) {
   .hint { transition-duration: .01ms; }
+}
+
+/* ------------------------------------------------------------------
+   The breeze. A share of the blooms lean back and forth together on
+   one long cycle, so the bed is never quite still.
+
+   Kept to a small number on purpose: each bloom that moves forces the
+   overlapping bed around it to be re-blended, and past roughly thirty
+   the page drops below 60fps. It animates the <img>, so the wrapper's
+   transform stays free for the hover swell.
+   ------------------------------------------------------------------ */
+
+.bloom.sway img {
+  animation: breeze 7s ease-in-out infinite alternate;
+}
+
+@keyframes breeze {
+  from {
+    transform: translateX(calc(-1 * var(--ax, 1%)))
+               rotate(calc(-1 * var(--ar, 1deg)));
+  }
+  to {
+    transform: translateX(var(--ax, 1%))
+               rotate(var(--ar, 1deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bloom.sway img { animation: none; }
 }

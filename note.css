@@ -17,25 +17,44 @@
 
   position: fixed;
   inset: 0;
+  height: 100lvh;             /* full bleed, like the flowers behind it */
   display: none;              /* the flowers hold the screen until asked */
-  place-items: center;
-  overflow: hidden;
-  padding: clamp(16px, 3.5vmin, 48px);
+  overflow-y: auto;           /* the gallery sits a scroll below the note */
+  overflow-x: hidden;
+  /* reserve the scrollbar on both sides so nothing drifts off centre */
+  scrollbar-gutter: stable both-edges;
+  scroll-behavior: smooth;
   background: var(--page-pre);
   font-family: 'Gaegu', 'Nanum Gothic Coding', ui-monospace,
                SFMono-Regular, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
 }
 
-.note-page.active { display: grid; }
+.note-page.active { display: block; }
 
 .note-page * { box-sizing: border-box; }
 
 /* the sheet holds the whole composition at a fixed proportion */
+.panel {
+  position: relative;
+  z-index: 1;                 /* above the fixed bloom frame */
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100lvh;
+  /* the ground spans the chrome; the content keeps clear of the notch and
+     the home indicator */
+  padding:
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-top, 0px))
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-right, 0px))
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-bottom, 0px))
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-left, 0px));
+}
+
 .sheet {
   position: relative;
   width: min(768px, 100%);
-  height: min(1024px, 92dvh);
+  height: min(1024px, 88dvh);
   display: flex;
   flex-direction: column;
 }
@@ -55,9 +74,12 @@
   font-weight: 700;
   letter-spacing: .1em;
   line-height: 1.2;
-  /* the girl sits to the right of the words */
-  padding-right: clamp(70px, 15vmin, 140px);
 }
+
+/* the girl stands to the right of the note's heading, so the words shift
+   left to clear her. The gallery has no girl and stays centred. */
+.note-panel .sheet-title,
+.note-panel .sheet-rule { padding-right: clamp(70px, 15vmin, 140px); }
 
 .sheet-girl {
   position: absolute;
@@ -82,7 +104,6 @@
   justify-content: center;
   gap: clamp(8px, 1.6vmin, 16px);
   margin-top: clamp(6px, 1.2vmin, 12px);
-  padding-right: clamp(70px, 15vmin, 140px);
 }
 
 .sheet-rule .dash {
@@ -113,7 +134,6 @@
   position: relative;
   height: 100%;
   overflow-y: auto;
-  overscroll-behavior: contain;
   padding: clamp(22px, 4.2vmin, 46px) clamp(20px, 4vmin, 44px);
   outline: none;
   scrollbar-width: thin;
@@ -177,8 +197,9 @@ letter-spacing: .08em;
 
 .sheet-flowers {
   position: absolute;
-  right: calc(var(--gutter) + clamp(6px, 1.6vmin, 18px));
-  bottom: clamp(2px, 1vmin, 14px);
+  /* nudged onto the panel's edge so the scrolling text runs clear of it */
+  right: calc(var(--gutter) - clamp(10px, 1.8vmin, 22px));
+  bottom: clamp(-6px, -0.6vmin, 0px);
   width: clamp(80px, 14vmin, 132px);
   height: auto;
   pointer-events: none;
@@ -205,8 +226,12 @@ letter-spacing: .08em;
 /* --- hearts and dots ------------------------------------------------- */
 
 .sheet-doodles {
+  /* per panel, so each section can bring its own in on its own beat. The
+     positions stay clear of the top and bottom edges so none is sliced at
+     the seam where the panels meet. */
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
   color: var(--accent);
 }
@@ -235,21 +260,24 @@ letter-spacing: .08em;
 /* --- back ------------------------------------------------------------ */
 
 .note-page .back {
-  position: absolute;
-  left: clamp(14px, 3vmin, 34px);
-  top: clamp(14px, 3vmin, 34px);
+  position: fixed;             /* stays put while the view scrolls */
+  left: calc(clamp(14px, 3vmin, 34px) + env(safe-area-inset-left, 0px));
+  top: calc(clamp(14px, 3vmin, 34px) + env(safe-area-inset-top, 0px));
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--line);
+  z-index: 3;                  /* above the edge blooms */
+  color: var(--ink);           /* pink on a pink bloom does not read */
   font-size: clamp(13px, 1.8vmin, 18px);
   letter-spacing: .06em;
   text-decoration: none;
-  opacity: .9;
+  opacity: .8;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, .95),
+               0 0 10px rgba(255, 255, 255, .8);
 }
 
 .note-page .back:hover,
-.note-page .back:focus-visible { opacity: 1; color: var(--accent); }
+.note-page .back:focus-visible { opacity: 1; color: var(--heart, #EE6E8C); }
 
 .note-page .back-arrow {
   width: 1em;
@@ -270,7 +298,7 @@ letter-spacing: .08em;
 /* the pink ground, washing in over the lighter base */
 .note-page::before {
   content: '';
-  position: absolute;
+  position: fixed;             /* the view scrolls; the ground stays put */
   inset: 0;
   background: var(--page);
   opacity: 0;
@@ -366,4 +394,58 @@ letter-spacing: .08em;
     transition-duration: .01ms;
     transition-delay: 0s;
   }
+}
+
+/* ------------------------------------------------------------------
+   Watercolour blooms crowding in at the edges of the note.
+   ------------------------------------------------------------------ */
+
+.note-blooms {
+  /* fixed to the window, not to a panel — a panel-bound layer clipped the
+     flowers at the seam where the note meets the gallery */
+  position: fixed;
+  inset: 0;
+  z-index: 0;           /* the sheets sit above these */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.note-blooms .nb {
+  position: absolute;
+  height: auto;
+  opacity: .88;
+  /* eased back a touch so the writing stays the loudest thing */
+  filter: saturate(.94) brightness(1.05);
+}
+
+/* corners, each cropped by the edge it leans on */
+.nb-tl { left: -10%; top: 4%;      width: clamp(180px, 28vmin, 400px); transform: rotate(-14deg); }
+.nb-tr { right: -7%; top: -15%;    width: clamp(190px, 30vmin, 420px); transform: rotate(17deg); }
+.nb-bl { left: -9%;  bottom: -15%; width: clamp(195px, 31vmin, 430px); transform: rotate(9deg); }
+.nb-br { right: -8%; bottom: -13%; width: clamp(185px, 29vmin, 410px); transform: rotate(-11deg); }
+
+/* and a smaller one halfway down each side */
+.nb-lm { left: -10%; top: 40%;     width: clamp(130px, 20vmin, 290px); transform: translateY(-50%) rotate(6deg); }
+.nb-rm { right: -10%;top: 46%;     width: clamp(130px, 20vmin, 290px); transform: translateY(-50%) rotate(-8deg); }
+
+/* the side pair only earns its place on a wide screen */
+@media (max-width: 1180px) {
+  .nb-lm, .nb-rm { display: none; }
+}
+
+/* on a phone the sheet fills the screen, so keep just two corners */
+@media (max-width: 640px) {
+  .nb-tl, .nb-br { display: none; }
+  /* clear of the girl in the heading */
+  .nb-tr { width: clamp(120px, 34vw, 200px); top: 17%; right: -13%; }
+  .nb-bl { width: clamp(130px, 36vw, 210px); bottom: -4%; left: -13%; }
+}
+
+/* they settle in just behind the ground, framing the page before the
+   note itself assembles */
+.js .note-page .nb { opacity: 0; transition: opacity .8s ease .15s; }
+.note-page.in-view .nb { opacity: .88; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .note-page .nb { transition-duration: .01ms; }
 }

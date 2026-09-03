@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- tints Safari's own chrome to the bed colour, so the strip behind a
+     translucent toolbar reads as part of the flowers -->
+<meta name="theme-color" content="#F0899F">
 <title>Happy Birthday</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="note.css">
+<link rel="stylesheet" href="gallery.css">
 </head>
 <body>
 
@@ -129,6 +133,21 @@
 
 
 <main class="note-page" id="page">
+
+  <!-- One frame of blooms and doodles for the whole view. They are fixed
+       to the window, so scrolling from the note to the gallery never cuts
+       a flower in half at the seam between the two. -->
+  <div class="note-blooms" aria-hidden="true">
+    <img class="nb nb-tl" src="assets/flowers/f01.png" alt="" draggable="false">
+    <img class="nb nb-tr" src="assets/flowers/f04.png" alt="" draggable="false">
+    <img class="nb nb-bl" src="assets/flowers/f02.png" alt="" draggable="false">
+    <img class="nb nb-br" src="assets/flowers/f01.png" alt="" draggable="false">
+    <img class="nb nb-lm" src="assets/flowers/f02.png" alt="" draggable="false">
+    <img class="nb nb-rm" src="assets/flowers/f04.png" alt="" draggable="false">
+  </div>
+
+  <div class="panel note-panel">
+
   <div class="sheet">
 
     <header class="sheet-head">
@@ -153,6 +172,21 @@
         <span class="dash"></span>
       </div>
     </header>
+
+    <div class="sheet-doodles" aria-hidden="true">
+      <svg class="hrt" style="--d:1.50s; --x:3%; --y:26%; --sz:24px; --r:-10deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.58s; --x:97%; --y:38%; --sz:26px; --r:12deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.66s; --x:96%; --y:66%; --sz:17px; --r:-6deg"><use href="#hrt"/></svg>
+      <svg class="hrt" style="--d:1.74s; --x:4.5%; --y:78%; --sz:21px; --r:8deg"><use href="#hrt"/></svg>
+
+      <span class="pip" style="--d:1.54s; --x:6%; --y:32%; --sz:7px"></span>
+      <span class="pip" style="--d:1.62s; --x:2.5%; --y:44%; --sz:6px"></span>
+      <span class="pip" style="--d:1.70s; --x:3.5%; --y:60%; --sz:6px"></span>
+      <span class="pip" style="--d:1.78s; --x:7%; --y:74%; --sz:6px"></span>
+      <span class="pip" style="--d:1.86s; --x:96%; --y:30%; --sz:7px"></span>
+      <span class="pip" style="--d:1.94s; --x:97%; --y:54%; --sz:6px"></span>
+      <span class="pip" style="--d:2.02s; --x:94.5%; --y:72%; --sz:6px"></span>
+    </div>
 
     <div class="note-box">
       <svg class="note-frame" viewBox="0 0 400 400" preserveAspectRatio="none" aria-hidden="true">
@@ -191,26 +225,67 @@
       <circle class="eye" cx="30" cy="68" r="3.5"/>
     </svg>
 
-    <div class="sheet-doodles" aria-hidden="true">
-      <svg class="hrt" style="--d:1.50s; --x:2.5%; --y:36%; --sz:24px; --r:-10deg"><use href="#hrt"/></svg>
-      <svg class="hrt" style="--d:1.58s; --x:97.5%;--y:49%; --sz:26px; --r:12deg"><use href="#hrt"/></svg>
-      <svg class="hrt" style="--d:1.66s; --x:96.5%;--y:74%; --sz:17px; --r:-6deg"><use href="#hrt"/></svg>
-      <svg class="hrt" style="--d:1.74s; --x:4%;   --y:92%; --sz:21px; --r:8deg"><use href="#hrt"/></svg>
 
-      <span class="pip" style="--d:1.54s; --x:4.5%; --y:42%; --sz:7px"></span>
-      <span class="pip" style="--d:1.62s; --x:2.5%; --y:46%; --sz:6px"></span>
-      <span class="pip" style="--d:1.70s; --x:3%;   --y:66%; --sz:6px"></span>
-      <span class="pip" style="--d:1.78s; --x:5%;   --y:94%; --sz:6px"></span>
-      <span class="pip" style="--d:1.86s; --x:96%;  --y:41%; --sz:7px"></span>
-      <span class="pip" style="--d:1.94s; --x:96.5%;--y:64%; --sz:6px"></span>
-      <span class="pip" style="--d:2.02s; --x:95.5%;--y:88%; --sz:6px"></span>
-    </div>
+    <a class="more" href="#gallery" id="more">
+      <span>my favourite moments</span>
+      <svg viewBox="0 0 24 30" aria-hidden="true">
+        <path d="M12 2 L12 24 M4 17 L12 26 L20 17"/>
+      </svg>
+    </a>
 
   </div>
+
+  </div><!-- /note-panel -->
+
+  <!-- the gallery, a scroll below the note -->
+  <section class="panel gallery-panel" id="gallery">
+      <div class="gallery-ground" aria-hidden="true"></div>
+
+
+
+
+      <div class="sheet-doodles gallery-doodles" aria-hidden="true">
+        <svg class="hrt" style="--d:2.45s; --x:3%; --y:26%; --sz:24px; --r:-10deg"><use href="#hrt"/></svg>
+        <svg class="hrt" style="--d:2.53s; --x:97%; --y:38%; --sz:26px; --r:12deg"><use href="#hrt"/></svg>
+        <svg class="hrt" style="--d:2.61s; --x:96%; --y:66%; --sz:17px; --r:-6deg"><use href="#hrt"/></svg>
+        <svg class="hrt" style="--d:2.69s; --x:4.5%; --y:78%; --sz:21px; --r:8deg"><use href="#hrt"/></svg>
+
+        <span class="pip" style="--d:2.49s; --x:6%; --y:32%; --sz:7px"></span>
+        <span class="pip" style="--d:2.57s; --x:2.5%; --y:44%; --sz:6px"></span>
+        <span class="pip" style="--d:2.65s; --x:3.5%; --y:60%; --sz:6px"></span>
+        <span class="pip" style="--d:2.73s; --x:7%; --y:74%; --sz:6px"></span>
+        <span class="pip" style="--d:2.81s; --x:96%; --y:30%; --sz:7px"></span>
+        <span class="pip" style="--d:2.89s; --x:97%; --y:54%; --sz:6px"></span>
+        <span class="pip" style="--d:2.97s; --x:94.5%; --y:72%; --sz:6px"></span>
+      </div>
+
+    <div class="sheet gallery-sheet">
+      <header class="sheet-head">
+        <h1 class="sheet-title" id="galleryTitle">my favourite moments</h1>
+        <div class="sheet-rule" aria-hidden="true">
+          <span class="dash"></span>
+          <svg class="rule-heart" viewBox="0 0 32 29"><use href="#hrt"/></svg>
+          <span class="dash"></span>
+        </div>
+      </header>
+
+      <!-- photos are rendered from gallery.json -->
+      <div class="shots" id="shots"></div>
+    </div>
+  </section>
 
   <a class="back" href="index.html" id="back">
     <svg class="back-arrow" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 16.5 L8 2 M2 8 L8 1.5 L14 8"/></svg>back to the flowers</a>
 </main>
+
+<!-- a photo, opened large -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close">&#215;</button>
+  <figure class="lb-frame">
+    <img class="lb-img" id="lbImg" src="" alt="">
+    <figcaption class="lb-note" id="lbNote"></figcaption>
+  </figure>
+</div>
 
 <!-- shared bits: the heart outline and the hand-drawn wobble -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">

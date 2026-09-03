@@ -139,9 +139,20 @@
      9:16 window this lands back on scale 1 and reproduces the artwork. */
   var CONTENT_H = 900;
 
+  /* Measured off the stage's own box rather than the document. The bed
+     now spans 100lvh, which on iOS is taller than the visible area — read
+     the document height instead and the bottom strip, the part hiding
+     behind the toolbar, would be planted with no flowers. */
+  var viewportEl = document.querySelector('.viewport');
+
   function measure() {
-    vw = document.documentElement.clientWidth  || window.innerWidth;
-    vh = document.documentElement.clientHeight || window.innerHeight;
+    var box = viewportEl && viewportEl.getBoundingClientRect();
+
+    vw = (box && Math.round(box.width))  ||
+         document.documentElement.clientWidth  || window.innerWidth;
+    vh = (box && Math.round(box.height)) ||
+         document.documentElement.clientHeight || window.innerHeight;
+
     scale = Math.min(vw / STAGE_W, vh / CONTENT_H);
   }
 
@@ -252,6 +263,42 @@
     frag.appendChild(coverEl);
   }
 
+  /* --- the breeze -----------------------------------------------------
+     A share of the blooms lean together on one shared cycle, so the bed
+     reads as one gust passing over rather than flowers fidgeting on their
+     own. It rides on the <img>, leaving the wrapper's transform to the
+     hover swell, which is untouched.
+
+     The count is deliberately small. Every moving bloom forces the
+     overlapping bed around it to be re-blended, and past roughly thirty
+     the page stops holding 60fps. Stemmed blooms sit it out — one
+     drifting away from the bloom hiding its cut end would show green. */
+
+  /* Eighteen is where the page still holds a clean 60fps with no long
+     frames at all; at 24 and 30 the median holds but stalls creep in.
+     Fewer movers, each leaning a little further, buys the same read. */
+  var SWAY_COUNT = 18;
+
+  function markSway(els) {
+    if (!els.length) return;
+    var step = Math.max(1, els.length / SWAY_COUNT);
+
+    for (var i = 0, taken = 0; taken < SWAY_COUNT && i < els.length; taken++) {
+      var el = els[Math.floor(i)];
+      var img = el.firstChild;
+      i += step;
+      if (!img) continue;
+
+      el.classList.add('sway');
+      // same phase and speed for all of them; only how far each leans
+      // varies, so the movement reads as wind rather than noise
+      // how far it leans also costs frames — a bigger sweep dirties more
+      // of the bed around it — so this stays gentle
+      img.style.setProperty('--ax', between(0.7, 1.5).toFixed(2) + '%');
+      img.style.setProperty('--ar', between(0.6, 1.3).toFixed(2) + 'deg');
+    }
+  }
+
   /* Where a placed bloom's stem end lands on the page, after its own
      rotation, and a face-on bloom sized to sit over it. */
 
@@ -313,6 +360,7 @@
     var frag = new DocumentFragment();
     var bleed = 340 * scale;         // overhang so no edge is ever bare
     var covers = [];
+    var swayable = [];               // stemless live blooms, in field order
     var z = 1;
 
     bakeOps = [];
@@ -350,6 +398,7 @@
 
           var cover = stemCover(o);
           if (cover) { cover.owner = el; el._tipVec = cover.tipVec; covers.push({ opts: cover }); }
+          else swayable.push(el);
         }
       }
     });
@@ -361,6 +410,10 @@
       if (c.bake) bakeOps.push(c.opts);
       else pair(c.opts.owner, makeBloom(c.opts), frag);
     });
+
+    // picked evenly through the field so the gust is spread across it,
+    // and all classed in the same frame so they start in phase
+    markSway(swayable);
 
     bed.textContent = '';
     bed.appendChild(frag);
@@ -829,6 +882,176 @@
     if (noteBuilt) return;
     noteBuilt = true;
     paintNote(noteData);
+    paintGallery(galleryData);
+  }
+
+  /* --- the gallery ----------------------------------------------------
+     Photos and their notes come from gallery.json. The scattered layout
+     is fixed here rather than in the data, so swapping the photographs
+     never means rearranging the pile. */
+
+  var SHOT_LAYOUT = [
+    { x: '26%', y: '26%', w: '17%', r: '-6deg',  ar: '4 / 5',  z: 3 },
+    { x: '45%', y: '22%', w: '18%', r: '3deg',   ar: '3 / 4',  z: 4 },
+    { x: '65%', y: '23%', w: '16.5%', r: '-3deg',  ar: '4 / 5',  z: 5 },
+    { x: '84%', y: '28%', w: '17%', r: '5deg',   ar: '3 / 4',  z: 4 },
+    { x: '18%', y: '50%', w: '18%', r: '2deg',   ar: '3 / 4',  z: 6 },
+    { x: '38%', y: '53%', w: '16.5%', r: '-2deg',  ar: '3 / 4',  z: 7 },
+    { x: '59%', y: '55%', w: '17%', r: '4deg',   ar: '4 / 5',  z: 8 },
+    { x: '80%', y: '53%', w: '17%', r: '-4deg',  ar: '4 / 5',  z: 6 },
+    { x: '33%', y: '76%', w: '18%', r: '-3deg',  ar: '3 / 4',  z: 9 },
+    { x: '55%', y: '79%', w: '16.5%', r: '2deg',   ar: '3 / 4',  z: 10 }
+  ];
+
+  var GALLERY_FALLBACK = {
+    title: 'my favourite moments',
+    photos: [
+      { src: 'assets/photos/on-stairs.jpg', alt: 'sitting on the steps', note: 'sat on the steps, laughing about nothing in particular.' },
+      { src: 'assets/photos/coffee.jpg', alt: 'holding an enormous bowl of coffee', note: 'the biggest coffee they had. obviously.' },
+      { src: 'assets/photos/cocktails.jpg', alt: 'two cocktails on a table', note: 'cocktails, and a photo of the photo.' },
+      { src: 'assets/photos/kitttty.jpg', alt: 'a cat peeking over knees', note: 'supervised, as always, by management.' },
+      { src: 'assets/photos/movie.jpg', alt: 'popcorn at the cinema', note: 'movie night, and the whole bucket to yourself.' },
+      { src: 'assets/photos/funny-face.jpg', alt: 'wearing a mask in a shop', note: 'in a shop, wearing a face that was not yours.' },
+      { src: 'assets/photos/horses-face.jpg', alt: 'two horse masks', note: 'no explanation. none needed.' },
+      { src: 'assets/photos/dorm-night.jpg', alt: 'a kitchen and a lot of mess', note: 'we do not talk about what happened to that kitchen.' },
+      { src: 'assets/photos/e897a1f77219ba5e13e5ea77a0f06af0.jpg', alt: 'finishing a dessert', note: 'not leaving a single crumb behind.' },
+      { src: 'assets/photos/omg.jpg', alt: 'a close-up face', note: 'this exact face. every single time.' }
+    ]
+  };
+
+  var galleryData = null;
+
+  function paintGallery(data) {
+    if (!data || !Array.isArray(data.photos)) data = GALLERY_FALLBACK;
+
+    var titleEl = document.getElementById('galleryTitle');
+    var wrap    = document.getElementById('shots');
+    if (!wrap) return;
+
+    if (data.title && titleEl) titleEl.textContent = data.title;
+
+    var frag = document.createDocumentFragment();
+
+    /* Deal order: nearest the middle of the pile first, working outwards,
+       so it looks like someone laying prints down rather than a sweep. */
+    var FIRST_CARD_MS = 800;
+    var CARD_STEP_MS  = 100;
+
+    var order = data.photos.map(function (_, i) {
+      var s = SHOT_LAYOUT[i % SHOT_LAYOUT.length];
+      var dx = parseFloat(s.x) - 50, dy = parseFloat(s.y) - 55;
+      return { i: i, d: Math.hypot(dx, dy) };
+    }).sort(function (a, b) { return a.d - b.d; });
+
+    var beat = {};
+    order.forEach(function (o, rank) {
+      beat[o.i] = FIRST_CARD_MS + rank * CARD_STEP_MS;
+    });
+
+    var lastBeat = FIRST_CARD_MS + (data.photos.length - 1) * CARD_STEP_MS;
+    var shotsWrap = document.getElementById('shots');
+    if (shotsWrap) {
+      // the pile settles once the final print is down
+      shotsWrap.style.setProperty('--settle', (lastBeat + 500) + 'ms');
+    }
+
+    data.photos.forEach(function (photo, i) {
+      var spot = SHOT_LAYOUT[i % SHOT_LAYOUT.length];
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shot';
+      btn.style.cssText =
+        '--sx:' + spot.x + ';--sy:' + spot.y + ';--sw:' + spot.w +
+        ';--sr:' + spot.r + ';z-index:' + spot.z +
+        ';--sd:' + beat[i] + 'ms;';
+
+      var img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = photo.alt || '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.style.setProperty('--ar', spot.ar);
+
+      btn.appendChild(img);
+      btn.addEventListener('click', function () { openShot(photo); });
+      frag.appendChild(btn);
+    });
+
+    wrap.textContent = '';
+    wrap.appendChild(frag);
+    watchGallery();
+  }
+
+  if (window.fetch) {
+    fetch('gallery.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { galleryData = d || GALLERY_FALLBACK; })
+      .catch(function () { galleryData = GALLERY_FALLBACK; });
+  }
+
+  /* The entrance waits until the gallery is scrolled to, so it is watched
+     rather than over before you arrive. */
+
+  function watchGallery() {
+    var panel = document.getElementById('gallery');
+    var scroller = document.getElementById('page');
+    if (!panel) return;
+
+    if (!('IntersectionObserver' in window)) { panel.classList.add('in'); return; }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        panel.classList.add('in');
+        io.disconnect();
+      });
+    }, { root: scroller, threshold: 0.22 });
+
+    io.observe(panel);
+  }
+
+  /* --- one photo, opened large ---------------------------------------- */
+
+  var lightbox = document.getElementById('lightbox');
+  var lbImg    = document.getElementById('lbImg');
+  var lbNote   = document.getElementById('lbNote');
+  var lbClose  = document.getElementById('lbClose');
+  var lastShot = null;
+
+  function openShot(photo) {
+    if (!lightbox) return;
+    lastShot = document.activeElement;
+
+    lbImg.src = photo.src;
+    lbImg.alt = photo.alt || '';
+    lbNote.textContent = photo.note || '';
+
+    lightbox.hidden = false;
+    void lightbox.offsetHeight;          // let the hidden state land first
+    lightbox.classList.add('open');
+    if (lbClose) lbClose.focus();
+  }
+
+  function closeShot() {
+    if (!lightbox || lightbox.hidden) return;
+    lightbox.classList.remove('open');
+    setTimeout(function () {
+      lightbox.hidden = true;
+      lbImg.src = '';
+      if (lastShot && lastShot.focus) lastShot.focus();
+    }, 300);
+  }
+
+  if (lightbox) {
+    // clicking the backdrop closes it; clicking the photo itself does not
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) closeShot();
+    });
+    if (lbClose) lbClose.addEventListener('click', closeShot);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeShot();
+    });
   }
 
   // fetched up front so the words are ready before the note is opened

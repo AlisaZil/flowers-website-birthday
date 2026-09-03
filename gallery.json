@@ -1,0 +1,25 @@
+{
+  "title": "my favourite moments",
+  "photos": [
+    { "src": "assets/photos/on-stairs.jpg", "alt": "sitting on the steps",
+      "note": "sat on the steps, laughing about nothing in particular." },
+    { "src": "assets/photos/coffee.jpg", "alt": "holding an enormous bowl of coffee",
+      "note": "the biggest coffee they had. obviously." },
+    { "src": "assets/photos/cocktails.jpg", "alt": "two cocktails on a table",
+      "note": "cocktails, and a photo of the photo." },
+    { "src": "assets/photos/kitttty.jpg", "alt": "a cat peeking over knees",
+      "note": "supervised, as always, by management." },
+    { "src": "assets/photos/movie.jpg", "alt": "popcorn at the cinema",
+      "note": "movie night, and the whole bucket to yourself." },
+    { "src": "assets/photos/funny-face.jpg", "alt": "wearing a mask in a shop",
+      "note": "in a shop, wearing a face that was not yours." },
+    { "src": "assets/photos/horses-face.jpg", "alt": "two horse masks",
+      "note": "no explanation. none needed." },
+    { "src": "assets/photos/dorm-night.jpg", "alt": "a kitchen and a lot of mess",
+      "note": "we do not talk about what happened to that kitchen." },
+    { "src": "assets/photos/e897a1f77219ba5e13e5ea77a0f06af0.jpg", "alt": "finishing a dessert",
+      "note": "not leaving a single crumb behind." },
+    { "src": "assets/photos/omg.jpg", "alt": "a close-up face",
+      "note": "this exact face. every single time." }
+  ]
+}
