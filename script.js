@@ -1069,6 +1069,23 @@
   var hintEl = document.getElementById('hint');
   if (hintEl) hintEl.addEventListener('click', fadeToNote);
 
+  /* On a phone or tablet the card is a small target, so a tap anywhere on
+     the flowers opens the note. Left off where there is a mouse: there the
+     bed answers to hover, and a stray click on a flower should not carry
+     you off the page. The check runs per tap, so a laptop with a touch
+     screen behaves according to how it is actually being used. */
+  if (viewportEl) {
+    viewportEl.addEventListener('click', function () {
+      if (window.matchMedia && window.matchMedia('(hover: hover)').matches) return;
+      if (document.body.classList.contains('loading')) return;
+      fadeToNote();
+    });
+    // touch devices get the whole bed as the target, so say so
+    if (window.matchMedia && !window.matchMedia('(hover: hover)').matches) {
+      viewportEl.style.cursor = 'pointer';
+    }
+  }
+
   if (noteEl) {
     noteEl.addEventListener('click', fadeToNote);
     noteEl.addEventListener('keydown', function (e) {
