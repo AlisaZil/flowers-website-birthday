@@ -1,0 +1,648 @@
+/* ------------------------------------------------------------------
+   The gallery: a few polaroids scattered on soft pink, with the title
+   and a handful of captions in speech bubbles.
+   ------------------------------------------------------------------ */
+
+.gallery-panel {
+  --bub-light:   #FBD3DF;   /* an ordinary caption */
+  --bub-dark:    #8E2C45;   /* the one that stands out */
+  --bub-ink:     #8E2C45;
+  --print:       #FFFDFA;   /* the paper the photos are printed on */
+
+  /* position and layout come from .panel — it is stacked, not in flow */
+  overflow: hidden;
+  /* No ground of its own: the note view's is already behind, and the
+     flowers sweeping away have to uncover the gallery rather than the
+     gallery covering them. */
+  background: transparent;
+}
+
+
+/* --- the stage everything is laid out on --------------------------- */
+
+.gal-stage {
+  position: relative;
+  z-index: 2;
+  width: min(1340px, 96%);
+  margin-inline: auto;
+}
+
+/* --- the title, in its bubble --------------------------------------- */
+
+.gal-title-bubble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .45em;
+  max-width: 62%;
+  margin: 0 0 clamp(10px, 2vmin, 22px);
+  padding: clamp(12px, 2.2vmin, 24px) clamp(20px, 3.4vmin, 38px);
+  border-radius: clamp(20px, 3.4vmin, 34px);
+  background: var(--bub-light);
+  color: var(--bub-ink);
+  font-family: 'Gaegu', 'Nanum Gothic Coding', cursive;
+  font-size: clamp(22px, 4.4vmin, 46px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: .01em;
+}
+
+/* the little tail underneath */
+.gal-title-bubble::after {
+  content: '';
+  position: absolute;
+  left: clamp(26px, 5vmin, 54px);
+  bottom: -13px;
+  width: 30px;
+  height: 22px;
+  background: var(--bub-light);
+  border-radius: 0 0 60% 40%;
+  transform: skewX(-14deg);
+}
+
+.bub-heart { width: .8em; height: .8em; flex: none; color: var(--bub-ink); }
+
+/* --- the pile ------------------------------------------------------- */
+
+.shots {
+  position: relative;
+  height: clamp(320px, 46vh, 560px);
+  /* The prints overhang the top of this box, which left the pile sitting
+     high; this drops it onto the middle of the screen without moving the
+     title or the button. */
+  transform: translateY(clamp(6px, 1.6vh, 22px));
+}
+
+/* one print */
+.shot {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  width: var(--sw);
+  padding: clamp(5px, .8vmin, 10px);
+  padding-bottom: clamp(12px, 1.9vmin, 22px);
+  border: 0;
+  border-radius: 3px;
+  background: var(--print);
+  box-shadow: 0 10px 26px rgba(150, 92, 112, .22),
+              0 2px 6px rgba(150, 92, 112, .16);
+  transform: translate(-50%, -50%) rotate(var(--sr, 0deg));
+  cursor: pointer;
+  transition: transform .35s cubic-bezier(.25, .8, .35, 1),
+              box-shadow .35s ease;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--ar, 4 / 5);
+  object-fit: cover;
+  border-radius: 1px;
+  background: #F3E2E6;
+}
+
+.shot:hover,
+.shot:focus-visible {
+  transform: translate(-50%, -50%) rotate(var(--sr, 0deg)) scale(1.035);
+  box-shadow: 0 16px 34px rgba(150, 92, 112, .28),
+              0 3px 9px rgba(150, 92, 112, .2);
+  z-index: 40 !important;
+}
+
+.shot:focus-visible { outline: 3px solid var(--bub-dark); outline-offset: 4px; }
+
+/* --- a caption clipped to a print ----------------------------------- */
+
+.shot-note {
+  position: absolute;
+  left: var(--nx);
+  top: var(--ny);
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  padding: .42em .9em .5em;
+  border-radius: 999px;
+  background: var(--bub-light);
+  color: var(--bub-ink);
+  font-family: 'Gaegu', 'Nanum Gothic Coding', cursive;
+  font-size: clamp(13px, 2.05vmin, 22px);
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) rotate(var(--nr, 0deg));
+  pointer-events: none;
+}
+
+.shot-note.dark { background: var(--bub-dark); color: #FFF4F7; }
+.shot-note .bub-heart { color: currentColor; }
+
+/* --- stickers -------------------------------------------------------- */
+
+.gal-sticker {
+  position: absolute;
+  left: var(--kx);
+  top: var(--ky);
+  width: var(--kw);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(var(--kr, 0deg));
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgba(150, 92, 112, .22));
+}
+
+/* --- narrow screens: the pile becomes a simple column ---------------- */
+
+@media (max-width: 780px) {
+  .shots {
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(14px, 4vw, 26px);
+    justify-items: center;
+  }
+
+  .shot {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    transform: rotate(var(--sr, 0deg));
+  }
+
+  .shot:hover,
+  .shot:focus-visible { transform: rotate(var(--sr, 0deg)) scale(1.02); }
+
+  .shot-note {
+    left: 50%;
+    top: auto;
+    bottom: -.7em;
+    transform: translateX(-50%) rotate(var(--nr, 0deg));
+  }
+
+  .gal-sticker { display: none; }
+  .gal-title-bubble { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot { transition-duration: .01ms; }
+}
+
+/* --- a photo, opened large ------------------------------------------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vmin, 56px);
+  background: rgba(94, 58, 62, .58);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.lightbox.open { opacity: 1; }
+.lightbox[hidden] { display: none; }
+
+.lb-frame {
+  margin: 0;
+  max-width: min(940px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #FFFDFC;
+  padding: clamp(8px, 1.2vmin, 14px);
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(70, 40, 44, .38);
+  transform: scale(.96);
+  transition: transform .3s cubic-bezier(.25, .8, .35, 1);
+}
+
+.lightbox.open .lb-frame { transform: none; }
+
+.lb-img {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  max-height: calc(100dvh - clamp(150px, 22vmin, 240px));
+  object-fit: contain;
+  border-radius: 2px;
+  background: #F6E7E7;
+}
+
+.lb-note {
+  padding: clamp(14px, 2.2vmin, 26px) clamp(10px, 1.6vmin, 20px)
+           clamp(10px, 1.6vmin, 20px);
+  color: var(--bub-dark, #8E2C45);
+  /* it sits under a very large photograph, so it needs to hold its own */
+  font-size: clamp(20px, 3.2vmin, 34px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.lb-close {
+  position: absolute;
+  top: calc(clamp(10px, 2.5vmin, 26px) + env(safe-area-inset-top, 0px));
+  right: calc(clamp(10px, 2.5vmin, 26px) + env(safe-area-inset-right, 0px));
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 253, 252, .9);
+  color: #7B4A45;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lb-close:hover { background: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox, .lb-frame, .shot { transition-duration: .01ms; }
+}
+
+/* ------------------------------------------------------------------
+   Arrival. Plays when the gallery scrolls into view, so it is watched
+   rather than finished before you get there: the ground settles, the
+   heading rises, then the photographs are laid down one at a time from
+   the middle of the pile outwards, the pile settles, and the small
+   things arrive last.
+   ------------------------------------------------------------------ */
+
+.gallery-ground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    rgba(255, 255, 255, .38),
+    rgba(255, 255, 255, .16) 45%,
+    rgba(255, 255, 255, 0) 78%);
+}
+
+.js .gallery-ground { opacity: 0; transition: opacity .5s ease; }
+.gallery-panel.in .gallery-ground { opacity: 1; }
+
+/* heading, then the rule under it */
+.js .gallery-panel .sheet-title {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .45s ease .25s,
+              transform .45s cubic-bezier(.25, .8, .35, 1) .25s;
+}
+
+.js .gallery-panel .sheet-rule {
+  opacity: 0;
+  transition: opacity .4s ease .55s;
+}
+
+.gallery-panel.in .sheet-title { opacity: 1; transform: none; }
+.gallery-panel.in .sheet-rule { opacity: 1; }
+
+/* each print is dealt in flat, then turns into the angle it rests at.
+   --sd is the beat, stamped per photo from the middle of the pile out. */
+.js .gallery-panel .shot {
+  opacity: 0;
+  transition: opacity .5s ease var(--sd, .8s),
+              transform .5s cubic-bezier(.25, .8, .35, 1) var(--sd, .8s);
+}
+
+.gallery-panel.in .shot { opacity: 1; }
+
+@media (min-width: 900px) {
+  .js .gallery-panel .shot {
+    transform: translate(-50%, -50%) translateY(20px) scale(.92) rotate(0deg);
+  }
+  .gallery-panel.in .shot {
+    transform: translate(-50%, -50%) rotate(var(--sr, 0deg));
+  }
+}
+
+@media (max-width: 899px) {
+  .js .gallery-panel .shot {
+    transform: translateY(20px) scale(.92) rotate(0deg);
+  }
+  .gallery-panel.in .shot {
+    transform: rotate(var(--sr, 0deg)) scale(.96);
+  }
+}
+
+/* and the hearts and dots last of all */
+.js .gallery-panel .sheet-doodles .hrt {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg)) scale(.8);
+}
+
+.js .gallery-panel .sheet-doodles .pip {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.8);
+}
+
+.js .gallery-panel .sheet-doodles .hrt,
+.js .gallery-panel .sheet-doodles .pip {
+  transition: opacity .45s ease var(--d, 2.5s),
+              transform .45s cubic-bezier(.25, .8, .35, 1) var(--d, 2.5s);
+}
+
+.gallery-panel.in .sheet-doodles .hrt {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+}
+
+.gallery-panel.in .sheet-doodles .pip {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .gallery-ground,
+  .js .gallery-panel .sheet-title,
+  .js .gallery-panel .sheet-rule,
+  .js .gallery-panel .shot,
+  .js .gallery-panel .shots,
+  .js .gallery-panel .sheet-doodles .hrt,
+  .js .gallery-panel .sheet-doodles .pip {
+    transition-duration: .01ms;
+    transition-delay: 0s;
+  }
+}
+
+/* ------------------------------------------------------------------
+   The closing panel — a last line and the way back to the flowers.
+   ------------------------------------------------------------------ */
+
+.closing-panel {
+  padding:
+    calc(clamp(20px, 4vmin, 60px) + env(safe-area-inset-top, 0px))
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-right, 0px))
+    calc(clamp(20px, 4vmin, 60px) + env(safe-area-inset-bottom, 0px))
+    calc(clamp(16px, 3.5vmin, 48px) + env(safe-area-inset-left, 0px));
+}
+
+.closing-inner {
+  position: relative;
+  z-index: 2;                  /* over the fixed bloom frame */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.closing-line {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(24px, 4.4vmin, 42px);
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1.3;
+}
+
+.closing-heart {
+  width: clamp(18px, 3vmin, 28px);
+  height: auto;
+  margin: clamp(12px, 2.2vmin, 24px) 0;
+  color: var(--accent);
+}
+
+.closing-sub {
+  margin: 0 0 clamp(26px, 4.5vmin, 48px);
+  color: var(--line);
+  font-size: clamp(15px, 2.3vmin, 22px);
+  letter-spacing: .06em;
+}
+
+.closing-btn {
+  position: relative;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: clamp(12px, 1.9vmin, 18px) clamp(22px, 3.4vmin, 34px);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #FFFDFC;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(15px, 2.2vmin, 21px);
+  letter-spacing: .06em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(176, 122, 128, .16);
+  transition: transform .3s cubic-bezier(.25, .8, .35, 1),
+              box-shadow .3s ease,
+              background-color .3s ease;
+}
+
+.closing-btn:hover,
+.closing-btn:focus-visible {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(176, 122, 128, .24);
+}
+
+.closing-btn:active { transform: translateY(0); }
+
+.closing-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.closing-btn-icon {
+  width: 1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* eases in as you reach it */
+.js .closing-panel .closing-inner {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.25, .8, .35, 1);
+}
+
+.closing-panel.in .closing-inner { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .closing-panel .closing-inner,
+  .closing-btn { transition-duration: .01ms; }
+}
+
+/* ------------------------------------------------------------------
+   The button that carries you to the next page.
+   ------------------------------------------------------------------ */
+
+.page-btn {
+  position: relative;
+  z-index: 60;                 /* above the flowers */
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: center;
+  padding: clamp(11px, 1.7vmin, 16px) clamp(20px, 3vmin, 30px);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #FFFDFC;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(14px, 2vmin, 19px);
+  letter-spacing: .06em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(176, 122, 128, .16);
+  transition: transform .3s cubic-bezier(.25, .8, .35, 1),
+              box-shadow .3s ease,
+              background-color .3s ease;
+}
+
+.page-btn:hover,
+.page-btn:focus-visible {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(176, 122, 128, .24);
+}
+
+.page-btn:active { transform: translateY(0); }
+
+.page-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.page-btn-icon {
+  width: 1.05em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the note's button sits under the writing panel */
+/* the letter is centred in the bed behind this page, so the button sits
+   at the foot of the screen rather than in the middle of the paper */
+.note-panel .page-btn { margin-top: clamp(14px, 2.6vmin, 28px); }
+
+/* the gallery's has to clear the prints overhanging the pile box */
+.gallery-next { margin-top: clamp(68px, 9vmin, 112px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-btn { transition-duration: .01ms; }
+}
+
+/* --- arrival: prints laid down one by one, captions after ------------ */
+
+.js .gallery-panel .gal-title-bubble {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease .25s,
+              transform .5s cubic-bezier(.25, .8, .35, 1) .25s;
+}
+
+.gallery-panel.in .gal-title-bubble { opacity: 1; transform: none; }
+
+.js .gallery-panel .shot,
+.js .gallery-panel .shot-note,
+.js .gallery-panel .gal-sticker { opacity: 0; }
+
+.js .gallery-panel .shot {
+  transition: opacity .5s ease var(--sd, .7s),
+              transform .5s cubic-bezier(.25, .8, .35, 1) var(--sd, .7s);
+}
+
+.js .gallery-panel .shot-note,
+.js .gallery-panel .gal-sticker {
+  transition: opacity .42s ease var(--sd, 1s),
+              transform .42s cubic-bezier(.25, .8, .35, 1) var(--sd, 1s);
+}
+
+.gallery-panel.in .shot,
+.gallery-panel.in .shot-note,
+.gallery-panel.in .gal-sticker { opacity: 1; }
+
+@media (min-width: 781px) {
+  .js .gallery-panel .shot {
+    transform: translate(-50%, -50%) translateY(18px) scale(.94) rotate(0deg);
+  }
+  .gallery-panel.in .shot {
+    transform: translate(-50%, -50%) rotate(var(--sr, 0deg));
+  }
+  .js .gallery-panel .shot-note {
+    transform: translate(-50%, -50%) scale(.9) rotate(var(--nr, 0deg));
+  }
+  .gallery-panel.in .shot-note {
+    transform: translate(-50%, -50%) rotate(var(--nr, 0deg));
+  }
+}
+
+@media (max-width: 780px) {
+  .js .gallery-panel .shot { transform: translateY(16px) scale(.95) rotate(0deg); }
+  .gallery-panel.in .shot { transform: rotate(var(--sr, 0deg)); }
+}
+
+.js .gallery-panel .gal-sticker {
+  transform: translate(-50%, -50%) scale(.7) rotate(var(--kr, 0deg));
+}
+
+.gallery-panel.in .gal-sticker {
+  transform: translate(-50%, -50%) rotate(var(--kr, 0deg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .gallery-panel .gal-title-bubble,
+  .js .gallery-panel .shot,
+  .js .gallery-panel .shot-note,
+  .js .gallery-panel .gal-sticker {
+    transition-duration: .01ms;
+    transition-delay: 0s;
+  }
+}
+
+/* --- lifting a print under the pointer ------------------------------- */
+
+/* These have to out-specify `.gallery-panel.in .shot`, which sets the
+   resting transform, and clear the arrival's stagger delay — otherwise
+   the lift never happened, and would have waited a second if it had. */
+.gallery-panel.in .shot:hover,
+.gallery-panel.in .shot:focus-visible {
+  transition: transform .4s cubic-bezier(.25, .8, .35, 1),
+              box-shadow .4s ease;
+  transition-delay: 0s;
+  box-shadow: 0 18px 38px rgba(150, 92, 112, .3),
+              0 4px 10px rgba(150, 92, 112, .22);
+  z-index: 60;
+}
+
+@media (min-width: 781px) {
+  .gallery-panel.in .shot:hover,
+  .gallery-panel.in .shot:focus-visible {
+    transform: translate(-50%, -50%) rotate(var(--sr, 0deg)) scale(1.06);
+  }
+}
+
+@media (max-width: 780px) {
+  .gallery-panel.in .shot:hover,
+  .gallery-panel.in .shot:focus-visible {
+    transform: rotate(var(--sr, 0deg)) scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-panel.in .shot:hover,
+  .gallery-panel.in .shot:focus-visible { transition-duration: .01ms; }
+}
+
+/* Arrival over: the stagger delays go, so the pointer gets an immediate
+   answer both ways. */
+.gallery-panel.settled .shot,
+.gallery-panel.settled .shot-note,
+.gallery-panel.settled .gal-sticker {
+  transition: transform .4s cubic-bezier(.25, .8, .35, 1),
+              box-shadow .4s ease,
+              opacity .4s ease;
+  transition-delay: 0s;
+}

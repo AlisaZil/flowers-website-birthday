@@ -18,12 +18,12 @@
   position: fixed;
   inset: 0;
   height: 100lvh;             /* full bleed, like the flowers behind it */
+  /* No z-index of its own, so it makes no stacking context: it settles
+     below the live bed (z-index 1) while the buttons inside it can still
+     lift above the flowers. Layering runs
+     background -> this card -> flowers -> the first card. */
   display: none;              /* the flowers hold the screen until asked */
-  overflow-y: auto;           /* the gallery sits a scroll below the note */
-  overflow-x: hidden;
-  /* reserve the scrollbar on both sides so nothing drifts off centre */
-  scrollbar-gutter: stable both-edges;
-  scroll-behavior: smooth;
+  overflow: hidden;           /* each panel is its own page now */
   background: var(--page-pre);
   font-family: 'Gaegu', 'Nanum Gothic Coding', ui-monospace,
                SFMono-Regular, Menlo, Consolas, monospace;
@@ -32,16 +32,42 @@
 
 .note-page.active { display: block; }
 
+/* the page you are on. A fixed height is what makes overflow-y engage —
+   with only min-height the panel grows past the window and is clipped by
+   the view instead of scrolling. */
+.panel.current { display: grid; }
+
+/* and the fade between them */
+.js .panel {
+  opacity: 0;
+  transform: translateY(8px) scale(.96);
+  transition: opacity .5s ease, transform .5s ease;    /* leaving */
+}
+
+.js .panel.current {
+  transition: opacity 1.9s cubic-bezier(.22, 1, .36, 1),
+              transform 1.9s cubic-bezier(.22, 1, .36, 1);
+}
+
+.js .panel.current.shown { opacity: 1; transform: none; }
+
 .note-page * { box-sizing: border-box; }
 
 /* the sheet holds the whole composition at a fixed proportion */
 .panel {
-  position: relative;
-  z-index: 1;                 /* above the fixed bloom frame */
-  display: grid;
+  /* Stacked, not in flow, so one page can arrive while the last is still
+     leaving — the gallery has to come up behind the flowers as they go. */
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
   place-items: center;
-  min-height: 100vh;
-  min-height: 100lvh;
+  /* a page taller than the window (the stacked gallery on a phone)
+     scrolls within itself; `safe` keeps the top reachable instead of
+     centring it out of view */
+  align-content: safe center;
+  overflow-y: auto;
+  overflow-x: hidden;
   /* the ground spans the chrome; the content keeps clear of the notch and
      the home indicator */
   padding:
@@ -76,26 +102,7 @@
   line-height: 1.2;
 }
 
-/* the girl stands to the right of the note's heading, so the words shift
-   left to clear her. The gallery has no girl and stays centred. */
-.note-panel .sheet-title,
-.note-panel .sheet-rule { padding-right: clamp(70px, 15vmin, 140px); }
 
-.sheet-girl {
-  position: absolute;
-  right: clamp(24px, 6vmin, 62px);
-  top: 0;
-  width: clamp(66px, 13.5vmin, 122px);
-  height: auto;
-}
-
-.sheet-sprig {
-  position: absolute;
-  right: clamp(2px, 1vmin, 12px);
-  top: clamp(26px, 5.5vmin, 52px);
-  width: clamp(20px, 3.6vmin, 34px);
-  height: auto;
-}
 
 /* line — heart — line */
 .sheet-rule {
@@ -205,11 +212,9 @@ letter-spacing: .08em;
   pointer-events: none;
 }
 
-.sheet-flowers .petals ellipse,
-.sheet-sprig .petals ellipse { fill: var(--petal); }
+.sheet-flowers .petals ellipse { fill: var(--petal); }
 
-.sheet-flowers .eye,
-.sheet-sprig .eye { fill: #FFF1F3; }
+.sheet-flowers .eye { fill: #FFF1F3; }
 
 .sheet-flowers .stems path {
   fill: none;
@@ -266,7 +271,7 @@ letter-spacing: .08em;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  z-index: 3;                  /* above the edge blooms */
+  z-index: 60;                 /* above the flowers */
   color: var(--ink);           /* pink on a pink bloom does not read */
   font-size: clamp(13px, 1.8vmin, 18px);
   letter-spacing: .06em;
@@ -449,3 +454,17 @@ letter-spacing: .08em;
 @media (prefers-reduced-motion: reduce) {
   .js .note-page .nb { transition-duration: .01ms; }
 }
+
+/* on a phone the card is nearly full width, so the corner doodle is
+   pushed aside to keep off the button below it */
+@media (max-width: 640px) {
+  .sheet-flowers {
+    right: calc(var(--gutter) - clamp(18px, 5vw, 34px));
+    bottom: clamp(4px, 2vw, 14px);
+    width: clamp(64px, 17vw, 96px);
+  }
+}
+
+/* the note's edge blooms are a fixed layer; the pages after it show
+   nothing but their ground */
+body.decor-off .note-blooms { display: none; }

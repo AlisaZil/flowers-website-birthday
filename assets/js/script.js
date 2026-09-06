@@ -37,9 +37,9 @@
 
   document.body.classList.add('loading');
 
-  var ASSETS = ['assets/note-blank.png', 'assets/girl.png'];
+  var ASSETS = ['assets/img/ui/note-blank.png', 'assets/img/ui/girl.png'];
   for (var n = 1; n <= 12; n++) {
-    ASSETS.push('assets/flowers/f' + (n < 10 ? '0' : '') + n + '.png');
+    ASSETS.push('assets/img/flowers/f' + (n < 10 ? '0' : '') + n + '.png');
   }
 
   if (loaderGirl) {
@@ -54,6 +54,7 @@
   var hintTimer  = null;
   var hintShown  = false;
   var hintQueued = false;
+  var hintPending = false;   // armHint asked for before the words arrived
 
   function showHint() {
     if (hintShown) return;
@@ -67,6 +68,8 @@
      so the nudge simply arrives a second in. With a mouse it waits to be
      earned, and the long stop covers someone who never moves it. */
   function armHint() {
+    // no point inviting a click while the note is still loading
+    if (!noteReady) { hintPending = true; return; }
     var delay = hoverWanted() ? HINT_FALLBACK_MS : HINT_TOUCH_MS;
     hintTimer = setTimeout(showHint, delay);
   }
@@ -164,10 +167,12 @@
     // the bed is laid out in window pixels, so it has to be replanted
     if (before !== vw + 'x' + vh) {
       var wasOpen = opened;
-      if (wasOpen) setOpen(false);   // the old elements are about to go
+      opened = false;                // the old elements are about to go
       plantBed();
       requestAnimationFrame(function () {
         buildIndex();
+        // re-open the fresh blooms straight away, with no animation, so a
+        // resize never looks like the flowers closing and opening again
         if (wasOpen) setOpen(true);
       });
     }
@@ -180,6 +185,7 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 
   var opened = false;
+  var lifted = [];   // the blooms that were carried outward
 
   /* --- deterministic randomness ------------------------------------
      A fixed seed keeps the bed identical on every load, so the card
@@ -222,7 +228,7 @@
     var el  = document.createElement('div');
     var img = document.createElement('img');
 
-    img.src = 'assets/flowers/' + opts.variant + '.png';
+    img.src = 'assets/img/flowers/' + opts.variant + '.png';
     img.alt = '';
     img.draggable = false;
     img.decoding = 'async';   // keeps decoding off the main thread
@@ -298,6 +304,45 @@
       img.style.setProperty('--ax', between(0.7, 1.5).toFixed(2) + '%');
       img.style.setProperty('--ar', between(0.6, 1.3).toFixed(2) + 'deg');
     }
+  }
+
+  /* --- the breeze ----------------------------------------------------
+     Every swaying bloom gets its own duration, phase and amplitude, so
+     the bed never moves as one. It rides on the <img>, leaving the
+     wrapper's transform free for the hover swell and the page turn, and
+     it pivots near the base so the head sways rather than the whole
+     picture drifting. Bigger blooms read as nearer, so they move a
+     little more than the small ones behind them. */
+
+  /* How many of the live blooms sway. Measured on this bed: up to ~45
+     swaying at once is indistinguishable from static (60fps, no long
+     frames); past ~70 the slow frames roughly double, because moving one
+     bloom forces the overlapping ones around it to be re-blended. Raise
+     it if you want a busier breeze and can live with that. */
+  var WIND_SHARE = 0.25;
+
+  function windVars(w, extra) {
+    // 0 for the smallest blooms in the bed, 1 for the largest
+    var near = Math.min(1, Math.max(0, (w / scale - 236) / (415 - 236)));
+    var amp  = (0.72 + near * 0.5) * (extra || 1);
+
+    return {
+      '--wind-duration': between(4, 7).toFixed(2) + 's',
+      // a negative delay drops each one in mid-cycle, so they never
+      // start together
+      '--wind-delay':    (-between(0, 7)).toFixed(2) + 's',
+      // the foreground multiplier must not push past the brief's ceilings
+      '--wind-angle':    Math.min(1.5, between(0.8, 1.5) * amp).toFixed(2) + 'deg',
+      '--wind-distance': Math.min(3, Math.max(1, between(1, 3) * amp)).toFixed(2) + 'px'
+    };
+  }
+
+  function applyWind(el, vars) {
+    var img = el.firstChild;
+    if (!img) return;
+    el.classList.add('wind');
+    for (var k in vars) img.style.setProperty(k, vars[k]);
+    el._wind = vars;
   }
 
   /* Where a placed bloom's stem end lands on the page, after its own
@@ -397,6 +442,8 @@
           var el = makeBloom(o);
           frag.appendChild(el);
 
+          if (rand() < WIND_SHARE) applyWind(el, windVars(o.w));
+
           var cover = stemCover(o);
           if (cover) { cover.owner = el; el._tipVec = cover.tipVec; covers.push({ opts: cover }); }
           else swayable.push(el);
@@ -408,8 +455,11 @@
     // buried bloom's cover is baked right behind it, in the same order.
     covers.forEach(function (c) {
       c.opts.z = z++;
-      if (c.bake) bakeOps.push(c.opts);
-      else pair(c.opts.owner, makeBloom(c.opts), frag);
+      if (c.bake) { bakeOps.push(c.opts); return; }
+      var coverEl = makeBloom(c.opts);
+      // same numbers as its owner, or the cut stem end would slide out
+      if (c.opts.owner._wind) applyWind(coverEl, c.opts.owner._wind);
+      pair(c.opts.owner, coverEl, frag);
     });
 
     // picked evenly through the field so the gust is spread across it,
@@ -438,7 +488,7 @@
     ctx.clearRect(0, 0, vw, vh);
 
     bakeOps.forEach(function (o) {
-      var img = IMG_CACHE['assets/flowers/' + o.variant + '.png'];
+      var img = IMG_CACHE['assets/img/flowers/' + o.variant + '.png'];
       if (!img || !img.naturalWidth) return;
 
       var w = o.w;
@@ -488,6 +538,7 @@
       };
       var el = makeBloom(o);
       frag.appendChild(el);
+      applyWind(el, windVars(o.w, 1.25));
 
       var cover = stemCover(o);
       if (cover) { cover.owner = el; el._tipVec = cover.tipVec; covers.push(cover); }
@@ -495,7 +546,9 @@
 
     covers.forEach(function (c) {
       c.z = z++;
-      pair(c.owner, makeBloom(c), frag);
+      var coverEl = makeBloom(c);
+      if (c.owner._wind) applyWind(coverEl, c.owner._wind);
+      pair(c.owner, coverEl, frag);
     });
 
     bedFront.appendChild(frag);
@@ -561,6 +614,7 @@
   }
 
   function bloomOne(item) {
+    if (opened) return;          // the bed has opened; nothing may move it
     var el = item.el;
 
     notePlayed();   // the nudge waits on this
@@ -633,83 +687,187 @@
      live blooms take part; the painted underlayer stays put behind them,
      so what opens up is more flowers rather than bare ground. */
 
-  var LIFT_COUNT = 44;    // live bed blooms that take part
-  var LIFT_MS    = 1350;
+  var EDGE_OVERLAP = 18;      // how far petals may still lap over the card
+  var SOLID = 0.40;           // the sprite's painted part, as a share of its box
+  var OUTER_DRIFT = 40;       // blooms already clear ease outward a touch
 
-  var opened = false;
-  var lifted = [];
-
+  /* The flowers open outward from the middle, far enough to uncover the
+     card waiting behind them, and then stay where they land. Each bloom
+     lying over the card is carried out along the line from the centre, so
+     what opens is the shape of the card itself; a little overlap is left
+     so petals still lap over its edges as it appears. */
+  /* The flowers open once per page load and stay open. Asking them to
+     close is ignored, so they never travel back and the reveal is never
+     replayed — a second click cannot restart it. */
   function setOpen(on) {
-    if (on === opened) return;
-    opened = on;
-    document.body.classList.toggle('opening', on);
-    if (on) applyBloom();
-    else    releaseBloom();
+    if (!on || opened) return;
+    opened = true;
+    document.body.classList.add('opening');
+    applyBloom();
   }
 
   function applyBloom() {
     lifted = [];
 
-    [bed, bedFront].forEach(function (layer, isFront) {
-      // the bed is in window pixels; the front layer is centred on the note
-      var cx = isFront ? 0 : vw / 2;
-      var cy = isFront ? 0 : vh * 0.40;
+    var cardEl = document.querySelector('.note-panel .sheet');
+    if (!cardEl || !cardEl.offsetWidth) return;
 
-      var items = [];
+    var r0 = cardEl.getBoundingClientRect();
+    var cx = r0.left + r0.width / 2;
+    var cy = r0.top + r0.height / 2;
+
+    /* The card is still at scale(.96) while it surfaces, so its rect now
+       is smaller than where it settles — work from the layout size, or the
+       flowers clear a card that then grows back out from under them. */
+    var aw = cardEl.offsetWidth;
+    var ah = cardEl.offsetHeight;
+
+    var halfW = Math.max(20, aw / 2 - EDGE_OVERLAP);
+    var halfH = Math.max(20, ah / 2 - EDGE_OVERLAP);
+    var L = cx - halfW, R = cx + halfW, T = cy - halfH, B = cy + halfH;
+
+    /* The heading sits barely a dozen pixels inside the card — well
+       within the overlap the petals are allowed — so the top edge moves
+       up to clear it. The sides and foot keep their lapping. */
+    var head = document.querySelector('.note-panel .sheet-head');
+    if (head) {
+      var hr = head.getBoundingClientRect();
+      if (hr.height) T = Math.min(T, hr.top - 8);
+    }
+
+    cx = (L + R) / 2;  cy = (T + B) / 2;
+    halfW = (R - L) / 2;  halfH = (B - T) / 2;
+
+    /* The button below the card must be uncovered as well, but folding it
+       into the same rectangle made that rectangle nearly as tall as the
+       screen — and then the flowers had nowhere to go and sat on it. It
+       is kept as a second, small box to clear instead. */
+    var keepClear = [{ l: L, r: R, t: T, b: B }];
+    var onward = document.querySelector('.note-panel .page-btn');
+    if (onward) {
+      var br = onward.getBoundingClientRect();
+      if (br.width) keepClear.push({ l: br.left - 14, r: br.right + 14,
+                                     t: br.top - 14,  b: br.bottom + 14 });
+    }
+
+    function clearOf(x, y, hw, hh) {
+      for (var q = 0; q < keepClear.length; q++) {
+        var k = keepClear[q];
+        if (x + hw > k.l && x - hw < k.r && y + hh > k.t && y - hh < k.b) return false;
+      }
+      return true;
+    }
+
+    var box = { width: (R - L) };
+
+    /* Read every position first, then write every transform. Measuring
+       and moving in the same loop makes the browser recompute layout on
+       each bloom — that stalled the main thread for about half a second
+       and held up the card's fade. */
+    var items = [];
+
+    [bed, bedFront].forEach(function (layer) {
+      var isFront = (layer === bedFront);
       var blooms = layer.children;
-
       for (var i = 0; i < blooms.length; i++) {
         var el = blooms[i];
-        if (el._coverFor) continue;        // covers follow their owner
-        var w  = parseFloat(el.style.width);
-        var dx = parseFloat(el.style.left) + w / 2 - cx;
-        var dy = parseFloat(el.style.top)  + w / 2 - cy;
-        items.push({ el: el, dx: dx, dy: dy, dist: Math.hypot(dx, dy) });
+        if (el._coverFor) continue;          // covers travel with their owner
+        items.push({
+          el: el,
+          front: isFront,
+          r:  el.getBoundingClientRect(),
+          cr: el._cover ? el._cover.getBoundingClientRect() : null
+        });
+      }
+    });
+
+    items.forEach(function (it, idx) {
+      var el = it.el, r = it.r;
+
+      /* A bloom and the cover hiding its cut stem must travel together or
+         the green end slides out, so they are cleared as one shape. */
+      var left = r.left, right = r.right, top = r.top, bottom = r.bottom;
+      if (it.cr) {
+        left   = Math.min(left, it.cr.left);
+        right  = Math.max(right, it.cr.right);
+        top    = Math.min(top, it.cr.top);
+        bottom = Math.max(bottom, it.cr.bottom);
       }
 
-      // nearest the note first, then keep only as many as we need
-      items.sort(function (a, b) { return a.dist - b.dist; });
-      if (!isFront) items = items.slice(0, LIFT_COUNT);
+      var bx = (left + right) / 2;
+      var by = (top + bottom) / 2;
+      // the transparent margin means the painted flower is smaller than its box
+      var hw = (right - left)  * SOLID;
+      var hh = (bottom - top) * SOLID;
 
-      var reach = items.length ? items[items.length - 1].dist : 1;
+      /* Everything moves straight out from the middle, so the bed opens
+         as a circle rather than four blocks sliding apart. The distance
+         is worked out along that same bearing: how far the paper's edge
+         lies that way, plus how far the bloom itself reaches along it. */
+      var dx = bx - cx, dy = by - cy;
+      var d  = Math.hypot(dx, dy);
 
-      items.forEach(function (it) {
-        var d = it.dist || 1;
-        var push = (isFront ? 150 : 150 * scale) / d;
-        // ease the drift off towards the edge of the moving group so the
-        // still blooms beyond it don't show a hard boundary
-        var falloff = 1 - Math.min(1, d / (reach * 1.15));
-        push *= 0.35 + 0.65 * falloff;
+      // a bloom sitting dead centre still needs a bearing; spread these
+      // on the golden angle so they never all leave the same way
+      var a  = d > 1 ? 0 : (idx * 2.39996);
+      var ux = d > 1 ? dx / d : Math.cos(a);
+      var uy = d > 1 ? dy / d : Math.sin(a);
 
-        var move = 'translate(' + (it.dx * push).toFixed(1) + 'px,' +
-                                  (it.dy * push).toFixed(1) + 'px) ';
-        var delay = Math.round(d * 0.18) + 'ms';
+      // distance from the middle to the paper's edge on this bearing
+      var edge = Math.min(halfW / Math.max(Math.abs(ux), 1e-3),
+                          halfH / Math.max(Math.abs(uy), 1e-3));
+      // and how far the bloom itself reaches along it
+      var reach = Math.abs(ux) * hw + Math.abs(uy) * hh;
 
-        // the bloom and, if it has one, the cover riding on it
-        [it.el, it.el._cover].forEach(function (el) {
-          if (!el) return;
-          el.classList.add('lift');
-          el.style.transitionDelay = delay;
-          el.style.transform = move + 'rotate(' + el._rot.toFixed(1) + 'deg) scale(1.12)';
-          lifted.push(el);
-        });
+      var travel = Math.max(0, edge + reach - EDGE_OVERLAP - d);
+
+      /* That is a close estimate, not a proof — a boxy bloom leaving on a
+         diagonal can still clip a corner. Nudge it out until it is really
+         clear, keeping the direction. */
+      for (var s = 0; s < 26; s++) {
+        if (clearOf(bx + ux * travel, by + uy * travel, hw, hh)) break;
+        travel = travel * 1.06 + 12;
+      }
+
+      var tx, ty;
+      if (travel > 0) {
+        tx = ux * travel;
+        ty = uy * travel;
+      } else {
+        // already clear: ease outward a touch, fading with distance
+        var k = OUTER_DRIFT * Math.max(0, 1 - d / (box.width * 1.15));
+        tx = ux * k;
+        ty = uy * k;
+      }
+
+      /* The blooms in front of the card sit inside .card, which is scaled
+         by --s. A translate written there is shrunk by that scale, so on a
+         phone they moved less than half as far as asked and stayed over
+         the paper. Undo the scale so the travel is in screen pixels. */
+      if (it.front && scale) { tx /= scale; ty /= scale; }
+
+      if (Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5) return;
+
+      /* A bloom hovered just before the click still has the swell's settle
+         timers pending; they would rewrite transform and drag it back. */
+      if (el._hold)   { clearTimeout(el._hold);   el._hold = null; }
+      if (el._settle) { clearTimeout(el._settle); el._settle = null; }
+
+      // inner blooms go first, so the opening travels outward
+      var delay = Math.round(Math.min(d, 760) * 0.6) + 'ms';
+      var move  = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) ';
+
+      [el, el._cover].forEach(function (node) {
+        if (!node) return;
+        node.classList.remove('swell');
+        node.classList.add('lift');
+        node.style.transitionDelay = delay;
+        node.style.transform = move + 'rotate(' + node._rot.toFixed(1) + 'deg)';
+        lifted.push(node);
       });
     });
   }
 
-  function releaseBloom() {
-    var settling = lifted;
-    lifted = [];
-
-    settling.forEach(function (el) {
-      el.style.transitionDelay = '0ms';
-      el.style.transform = 'rotate(' + el._rot.toFixed(1) + 'deg)';
-    });
-
-    setTimeout(function () {
-      settling.forEach(function (el) { el.classList.remove('lift'); });
-    }, LIFT_MS + 200);
-  }
 
   /* Clicking the card blooms the bed, holds long enough to watch it,
      then fades through to the letter. The scroll jump happens while the
@@ -717,6 +875,7 @@
 
   /* The bloom's own movement runs ~1.35s, so the veil now starts while
      it is still settling rather than after a pause. */
+  var CARD_REVEAL_MS = 500;   // the next card starts while the bed is still opening
   var BLOOM_VIEW_MS = 1150;   // time to watch the bloom before the fade
   var VEIL_IN_MS    = 450;    // matches the .veil transition
   var VEIL_HOLD_MS  = 110;    // a beat for the new view to paint
@@ -736,10 +895,12 @@
   var notePage = document.getElementById('page');
   var noteBody = document.body;
 
-  function openNote() {
+  function openNote(revealDelay) {
     noteBody.classList.add('on-note');
     notePage.classList.add('active');
     renderNote();                       // builds from note.json, once
+    resetPanels();
+    showPanel('noteMain', revealDelay); // always start on the note
     void notePage.offsetHeight;         // let the resting styles land
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
@@ -750,14 +911,11 @@
 
   function closeNote() {
     notePage.classList.remove('active', 'in-view');
-    notePage.scrollTop = 0;      // next visit starts at the note again
+    resetPanels();               // next visit starts on the note again
     noteBody.classList.remove('on-note');
 
-    // put the bed back the way it was and replay its fade
-    setOpen(false);
-    noteBody.classList.remove('ready');
-    void document.getElementById('bed').offsetHeight;
-    noteBody.classList.add('ready');
+    // the flowers stay where they opened — never reset, never replayed
+    noteBody.classList.remove('card-away');
 
     // let the nudge earn its place again
     hintShown = hintQueued = false;
@@ -767,25 +925,31 @@
 
   function fadeToNote() {
     if (travelling) return;
+
+    // the words are not here yet; remember the click and go when they are
+    if (!noteReady) { openWhenReady = true; return; }
+
     travelling = true;
 
     var hint = document.getElementById('hint');
     if (hint) hint.classList.remove('show');
 
+    /* All three overlap, so it reads as one soft reveal rather than three
+       steps: the flowers start opening and the first card starts leaving
+       on the same frame, and the next card begins surfacing from behind
+       them a moment later — while they are still moving. */
+    noteBody.classList.add('card-away');    // the first card fades and shrinks
+
+    if (reducedMotion()) { openNote(0); setOpen(true); travelling = false; return; }
+
+    /* The next card is put in place first — laid out but still invisible —
+       so the flowers can measure what they have to uncover. Then they open,
+       and the card surfaces from behind them a moment later, while they are
+       still moving. */
+    openNote(CARD_REVEAL_MS);
     setOpen(true);
 
-    if (reducedMotion()) { openNote(); travelling = false; return; }
-
-    setTimeout(function () {
-      if (veil) veil.classList.add('on');
-      setTimeout(function () {
-        openNote();                     // swapped under an opaque veil
-        setTimeout(function () {
-          if (veil) veil.classList.remove('on');
-          travelling = false;
-        }, VEIL_HOLD_MS);
-      }, VEIL_IN_MS);
-    }, BLOOM_VIEW_MS);
+    setTimeout(function () { travelling = false; }, 2500);
   }
 
   function fadeToFlowers() {
@@ -794,14 +958,11 @@
 
     if (reducedMotion()) { closeNote(); travelling = false; return; }
 
-    if (veil) veil.classList.add('on');
+    if (currentPanel) currentPanel.classList.remove('shown');
     setTimeout(function () {
       closeNote();
-      setTimeout(function () {
-        if (veil) veil.classList.remove('on');
-        travelling = false;
-      }, VEIL_HOLD_MS);
-    }, VEIL_IN_MS);
+      travelling = false;
+    }, PAGE_HIDE_MS);
   }
 
   var backEl = document.getElementById('back');
@@ -895,36 +1056,88 @@
      is fixed here rather than in the data, so swapping the photographs
      never means rearranging the pile. */
 
-  var SHOT_LAYOUT = [
-    { x: '24%', y: '26%', w: '17.5%', r: '-6deg',  ar: '4 / 5',  z: 3 },
-    { x: '45%', y: '22%', w: '18.5%', r: '3deg',   ar: '5 / 4',  z: 4 },
-    { x: '65%', y: '23%', w: '17%', r: '-3deg',  ar: '4 / 5',  z: 5 },
-    { x: '85%', y: '28%', w: '17.5%', r: '5deg',   ar: '5 / 4',  z: 4 },
-    { x: '15%', y: '50%', w: '18.5%', r: '2deg',   ar: '5 / 4',  z: 6 },
-    { x: '38%', y: '53%', w: '17%', r: '-2deg',  ar: '4 / 5',  z: 7 },
-    { x: '59%', y: '55%', w: '17.5%', r: '4deg',   ar: '4 / 5',  z: 8 },
-    { x: '81%', y: '53%', w: '17.5%', r: '-4deg',  ar: '5 / 4',  z: 6 },
-    { x: '33%', y: '76%', w: '18.5%', r: '-3deg',  ar: '5 / 4',  z: 9 },
-    { x: '55%', y: '79%', w: '17%', r: '2deg',   ar: '4 / 5',  z: 10 }
-  ];
+  /* How many photographs the gallery will take. Put between MIN and MAX
+     of them in gallery.json; anything past MAX is ignored, and the pile
+     is arranged to suit however many there are. */
+  var MIN_PHOTOS = 3;
+  var MAX_PHOTOS = 6;
+
+  /* A hand-made scatter for each count, in percentages of the stage, so
+     three photos sit as comfortably as six. `note` is where a caption
+     bubble hangs off the print, if that photo has one. */
+  var LAYOUTS = {
+    3: [
+      { x: '23.3%', y: '47.8%', w: '28%', r: '-3deg', ar: '5 / 4', z: 3, note: { x: '35.8%', y: '88.9%', r: '-2deg' } },
+      { x: '50.0%', y: '41.4%', w: '28%', r: '2deg',  ar: '4 / 5', z: 5, note: { x: '67.8%', y: '11.1%', r: '2deg', dark: true } },
+      { x: '75.8%', y: '52.2%', w: '28%', r: '-2deg', ar: '5 / 4', z: 4, note: { x: '82.0%', y: '91.0%', r: '1deg' } }
+    ],
+    4: [
+      { x: '21.5%', y: '39.2%', w: '26%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '28.7%', y: '74.8%', r: '-2deg' } },
+      { x: '43.7%', y: '52.2%', w: '24%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '65.2%', y: '34.9%', w: '25%', r: '-2deg', ar: '4 / 5', z: 4, note: { x: '80.2%', y: '13.3%', r: '2deg', dark: true } },
+      { x: '80.2%', y: '65.1%', w: '26%', r: '2deg',  ar: '5 / 4', z: 6, note: { x: '83.7%', y: '95.4%', r: '1deg' } }
+    ],
+    5: [
+      { x: '18.9%', y: '43.5%', w: '24%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '25.9%', y: '78.1%', r: '-2deg' } },
+      { x: '38.5%', y: '54.3%', w: '22%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '55.4%', y: '32.7%', w: '23%', r: '-2deg', ar: '4 / 5', z: 4, note: { x: '67.8%', y: '6.8%', r: '1deg', dark: true } },
+      { x: '69.6%', y: '63.0%', w: '24%', r: '1deg',  ar: '5 / 4', z: 6 },
+      { x: '83.7%', y: '34.9%', w: '22%', r: '3deg',  ar: '4 / 5', z: 4, note: { x: '85.6%', y: '69.4%', r: '2deg' } }
+    ],
+    6: [
+      { x: '18.0%', y: '45.7%', w: '23%', r: '-3deg', ar: '5 / 4', z: 3, note: { x: '24.2%', y: '80.2%', r: '-2deg' } },
+      { x: '35.8%', y: '52.2%', w: '20%', r: '2deg',  ar: '4 / 5', z: 5 },
+      { x: '52.6%', y: '28.4%', w: '22%', r: '-2deg', ar: '4 / 5', z: 4, note: { x: '64.2%', y: '5.7%',  r: '1deg', dark: true } },
+      { x: '70.4%', y: '24.1%', w: '22%', r: '3deg',  ar: '5 / 4', z: 6, note: { x: '87.4%', y: '17.6%', r: '2deg' } },
+      { x: '59.8%', y: '69.4%', w: '25%', r: '-1deg', ar: '5 / 4', z: 7 },
+      { x: '83.7%', y: '56.5%', w: '20%', r: '2deg',  ar: '4 / 5', z: 5, note: { x: '82.0%', y: '93.2%', r: '1deg' } }
+    ]
+  };
+
+  /* the little paper stickers, per count */
+  var STICKERS = {
+    3: [{ kind: 'flower', x: '38%', y: '10%', w: '5%',  r: '-8deg' },
+        { kind: 'heart',  x: '9%',  y: '20%', w: '6%',  r: '10deg' }],
+    4: [{ kind: 'flower', x: '33%', y: '10%', w: '5%',  r: '-8deg' },
+        { kind: 'heart',  x: '55%', y: '78%', w: '5.5%', r: '9deg' }],
+    5: [{ kind: 'flower', x: '30%', y: '12%', w: '4.5%', r: '-8deg' },
+        { kind: 'heart',  x: '26%', y: '24%', w: '5%',  r: '9deg' },
+        { kind: 'flower', x: '96%', y: '78%', w: '4.5%', r: '12deg' }],
+    6: [{ kind: 'flower', x: '44%', y: '10%', w: '4.5%', r: '-8deg' },
+        { kind: 'heart',  x: '25%', y: '30%', w: '5%',  r: '9deg' },
+        { kind: 'flower', x: '97%', y: '76%', w: '4.5%', r: '12deg' }]
+  };
 
   var GALLERY_FALLBACK = {
-    title: 'my favourite moments',
+    title: 'little moments with you:',
     photos: [
-      { src: 'assets/photos/web/flowers.jpg', alt: 'a bouquet of pink roses', note: 'the flowers you stopped to look at twice.' },
-      { src: 'assets/photos/web/ice-cream.jpg', alt: 'two ice cream cones held up together', note: 'far too hot that afternoon, and we did not care one bit.' },
-      { src: 'assets/photos/web/coffee.jpg', alt: 'a pink iced coffee in the sun', note: 'coffee for happiness. it worked.' },
-      { src: 'assets/photos/web/kItttty.jpg', alt: 'a cat asleep on a pink cushion', note: 'the correct way to spend a sunday.' },
-      { src: 'assets/photos/web/sea.jpg', alt: 'the sea at sunset', note: 'up far too early, and worth every minute of it.' },
-      { src: 'assets/photos/web/building.jpg', alt: 'old balconies at golden hour', note: 'the long walk home, the good kind of tired.' },
-      { src: 'assets/photos/web/pink-bike.jpg', alt: 'a pink bicycle with a basket of flowers', note: 'we said we would come back to this street. we should.' },
-      { src: 'assets/photos/web/tulip.jpg', alt: 'a bunch of pink tulips', note: 'just because it was a tuesday.' },
-      { src: 'assets/photos/web/pancake.jpg', alt: 'pancakes with berries and coffee', note: 'breakfast that turned into lunch.' },
-      { src: 'assets/photos/web/girl.jpg', alt: 'a mirror photo', note: 'this one. exactly this one.' }
+      { src: 'assets/img/photos/web/sea.jpg',       alt: '', note: 'my favorite day' },
+      { src: 'assets/img/photos/web/ice-cream.jpg', alt: '', note: '' },
+      { src: 'assets/img/photos/web/flowers.jpg',   alt: '', note: 'best memory' },
+      { src: 'assets/img/photos/web/kItttty.jpg',   alt: '', note: 'look how cute' },
+      { src: 'assets/img/photos/web/pancake.jpg',   alt: '', note: '' },
+      { src: 'assets/img/photos/web/pink-bike.jpg', alt: '', note: 'love you always' }
     ]
   };
 
   var galleryData = null;
+
+  var FLOWER_STICKER =
+    '<svg viewBox="0 0 40 40" aria-hidden="true">' +
+    '<g fill="#FFF9F0"><ellipse cx="20" cy="9" rx="7" ry="8"/>' +
+    '<ellipse cx="31" cy="16" rx="7" ry="8" transform="rotate(72 31 16)"/>' +
+    '<ellipse cx="27" cy="30" rx="7" ry="8" transform="rotate(144 27 30)"/>' +
+    '<ellipse cx="13" cy="30" rx="7" ry="8" transform="rotate(216 13 30)"/>' +
+    '<ellipse cx="9" cy="16" rx="7" ry="8" transform="rotate(288 9 16)"/></g>' +
+    '<circle cx="20" cy="20" r="5" fill="#F2D9A8"/>' +
+    '<circle cx="18" cy="19" r="1.1" fill="#D8B87E"/>' +
+    '<circle cx="22" cy="21" r="1.1" fill="#D8B87E"/></svg>';
+
+  var HEART_STICKER =
+    '<svg viewBox="0 0 36 33" aria-hidden="true">' +
+    '<path d="M18 31C18 31 2.5 22 2.5 11.6 2.5 6.3 6.6 2.5 11.2 2.5c3 0 5.5 1.6 6.8 4 1.3-2.4 3.8-4 6.8-4 4.6 0 8.7 3.8 8.7 9.1C33.5 22 18 31 18 31Z" fill="#F7A8C0"/>' +
+    '<circle cx="15" cy="13" r="1.7" fill="#FFF1F5"/>' +
+    '<circle cx="21" cy="13" r="1.7" fill="#FFF1F5"/></svg>';
 
   function paintGallery(data) {
     if (!data || !Array.isArray(data.photos)) data = GALLERY_FALLBACK;
@@ -935,91 +1148,218 @@
 
     if (data.title && titleEl) titleEl.textContent = data.title;
 
+    /* Take between MIN and MAX of them: any more are left out rather than
+       squeezed in, and the layout is chosen to suit the number kept. */
+    var photos = data.photos.slice(0, MAX_PHOTOS);
+    var slots  = LAYOUTS[photos.length] || LAYOUTS[Math.max(MIN_PHOTOS,
+                   Math.min(MAX_PHOTOS, photos.length))] || LAYOUTS[MAX_PHOTOS];
+
     var frag = document.createDocumentFragment();
 
-    /* Deal order: nearest the middle of the pile first, working outwards,
-       so it looks like someone laying prints down rather than a sweep. */
-    var FIRST_CARD_MS = 800;
-    var CARD_STEP_MS  = 100;
+    /* Dealt from the middle of the pile outwards, so it looks like someone
+       laying prints down rather than a sweep. */
+    var FIRST_CARD_MS = 700, CARD_STEP_MS = 110;
 
-    var order = data.photos.map(function (_, i) {
-      var s = SHOT_LAYOUT[i % SHOT_LAYOUT.length];
-      var dx = parseFloat(s.x) - 50, dy = parseFloat(s.y) - 55;
-      return { i: i, d: Math.hypot(dx, dy) };
+    var order = photos.map(function (_, i) {
+      var s = slots[i % slots.length];
+      return { i: i, d: Math.hypot(parseFloat(s.x) - 50, parseFloat(s.y) - 50) };
     }).sort(function (a, b) { return a.d - b.d; });
 
     var beat = {};
-    order.forEach(function (o, rank) {
-      beat[o.i] = FIRST_CARD_MS + rank * CARD_STEP_MS;
-    });
+    order.forEach(function (o, rank) { beat[o.i] = FIRST_CARD_MS + rank * CARD_STEP_MS; });
 
-    var lastBeat = FIRST_CARD_MS + (data.photos.length - 1) * CARD_STEP_MS;
-    var shotsWrap = document.getElementById('shots');
-    if (shotsWrap) {
-      // the pile settles once the final print is down
-      shotsWrap.style.setProperty('--settle', (lastBeat + 500) + 'ms');
-    }
-
-    data.photos.forEach(function (photo, i) {
-      var spot = SHOT_LAYOUT[i % SHOT_LAYOUT.length];
+    photos.forEach(function (photo, i) {
+      var spot = slots[i % slots.length];
 
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'shot';
       btn.style.cssText =
         '--sx:' + spot.x + ';--sy:' + spot.y + ';--sw:' + spot.w +
-        ';--sr:' + spot.r + ';z-index:' + spot.z +
-        ';--sd:' + beat[i] + 'ms;';
+        ';--sr:' + spot.r + ';z-index:' + spot.z + ';--sd:' + beat[i] + 'ms;';
 
       var img = document.createElement('img');
       img.src = photo.src;
       img.alt = photo.alt || '';
       img.loading = 'lazy';
-      img.style.setProperty('--ar', photo.ar || spot.ar);
       img.decoding = 'async';
+      img.style.setProperty('--ar', photo.ar || spot.ar);
 
       btn.appendChild(img);
       btn.addEventListener('click', function () { openShot(photo); });
       frag.appendChild(btn);
+
+      // a caption bubble, where the slot has somewhere to hang one
+      if (photo.note && spot.note) {
+        var tag = document.createElement('span');
+        tag.className = 'shot-note' + (spot.note.dark ? ' dark' : '');
+        tag.style.cssText =
+          '--nx:' + spot.note.x + ';--ny:' + spot.note.y +
+          ';--nr:' + (spot.note.r || '0deg') + ';z-index:' + (spot.z + 20) +
+          ';--sd:' + (beat[i] + 260) + 'ms;';
+        tag.appendChild(document.createTextNode(photo.note));
+        tag.insertAdjacentHTML('beforeend',
+          '<svg class="bub-heart" viewBox="0 0 32 29" aria-hidden="true"><use href="#hrt-solid"/></svg>');
+        frag.appendChild(tag);
+      }
+    });
+
+    // and the paper stickers
+    (STICKERS[photos.length] || []).forEach(function (k, n) {
+      var el = document.createElement('span');
+      el.className = 'gal-sticker';
+      el.setAttribute('aria-hidden', 'true');
+      el.style.cssText =
+        '--kx:' + k.x + ';--ky:' + k.y + ';--kw:' + k.w +
+        ';--kr:' + k.r + ';z-index:30;--sd:' + (FIRST_CARD_MS + 620 + n * 90) + 'ms;';
+      el.innerHTML = k.kind === 'heart' ? HEART_STICKER : FLOWER_STICKER;
+      frag.appendChild(el);
     });
 
     wrap.textContent = '';
     wrap.appendChild(frag);
-    watchGallery();
   }
 
   if (window.fetch) {
-    fetch('gallery.json', { cache: 'no-cache' })
+    fetch('assets/data/gallery.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { galleryData = d || GALLERY_FALLBACK; })
       .catch(function () { galleryData = GALLERY_FALLBACK; });
   }
 
-  /* The entrance waits until the gallery is scrolled to, so it is watched
-     rather than over before you arrive. */
+  /* --- the pages inside the note view --------------------------------
+     The note, the gallery and the closing word are three pages rather
+     than one long scroll. Each fades out before the next fades in, and
+     a page only plays its staged entrance when you actually arrive on
+     it — so it is watched, not finished behind your back. */
 
-  function watchGallery() {
-    revealOnArrival('gallery', 0.22);
-    revealOnArrival('closing', 0.35);
+  var PAGE_HIDE_MS   = 300;   // the page you are on steps aside
+  var currentPanel = null;
+  var panelBusy = false;
+
+  /* Leaving the note, the flowers carry on outward until they are off the
+     screen altogether, and only then is the bed taken away. Cutting it
+     mid-frame looked like the flowers had simply been switched off. */
+  function scatterAway() {
+    var cx = vw / 2, cy = vh / 2;
+    var reach = Math.hypot(vw, vh) * 0.9;
+
+    var items = [];
+    [bed, bedFront].forEach(function (layer) {
+      var kids = layer.children;
+      for (var i = 0; i < kids.length; i++) {
+        items.push({ el: kids[i], front: layer === bedFront,
+                     r: kids[i].getBoundingClientRect() });
+      }
+    });
+
+    items.forEach(function (it) {
+      var el = it.el, r = it.r;
+      var bx = r.left + r.width / 2, by = r.top + r.height / 2;
+      var dx = bx - cx, dy = by - cy;
+      var d = Math.hypot(dx, dy) || 1;
+
+      // where the opening already left it
+      var m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(el.style.transform || '');
+      var ox = m ? +m[1] : 0, oy = m ? +m[2] : 0;
+
+      // the front layer lives inside .card, which is scaled by --s
+      var k = (it.front && scale) ? reach / scale : reach;
+
+      el.classList.add('sweep');
+      // the ones nearest the middle leave last, so it reads as a parting
+      el.style.transitionDelay = Math.round(Math.max(0, 620 - d) * 0.28) + 'ms';
+      el.style.transform =
+        'translate(' + (ox + dx / d * k).toFixed(1) + 'px,' +
+                       (oy + dy / d * k).toFixed(1) + 'px) ' +
+        'rotate(' + el._rot.toFixed(1) + 'deg)';
+    });
   }
 
-  function revealOnArrival(id, threshold) {
-    var panel = document.getElementById(id);
-    var scroller = document.getElementById('page');
-    if (!panel) return;
+  function revealPanel(el, delay) {
+    // the flowers belong to the note; the pages after it are opaque
+    var wantsBed = (el.id === 'noteMain');
+    if (wantsBed) noteBody.classList.add('show-bed');
 
-    if (!('IntersectionObserver' in window)) { panel.classList.add('in'); return; }
+    /* The note's own edge blooms are a fixed layer, so they showed on
+       every page. They belong to the note alone. */
+    noteBody.classList.toggle('decor-off', !wantsBed);
 
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        panel.classList.add('in');
-        io.disconnect();
-      });
-    }, { root: scroller, threshold: threshold });
+    el.classList.add('current');          // laid out, but still invisible
+    void el.offsetHeight;                 // let the resting styles land
 
-    io.observe(panel);
+    var go = function () {
+      el.classList.add('shown');
+      el.classList.add('in');             // starts that page's entrance
+
+      /* Once the entrance is over, drop the per-item stagger delays. They
+         are only wanted for the arrival; left in place they also govern
+         hover, which then took a second to answer and a second to let go. */
+      setTimeout(function () { el.classList.add('settled'); }, 2200);
+
+      // once this page has covered the screen, the bed can go
+      if (!wantsBed) {
+        // only once the last flower is off the screen
+        setTimeout(function () {
+          noteBody.classList.remove('show-bed', 'decor-off');
+        }, 2000);
+      }
+    };
+
+    if (delay) { setTimeout(go, delay); return; }
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(go);
+    });
   }
+
+  /* Moving between pages: the current one is put away, the bed blooms in
+     the gap it leaves, and the next page comes up out of the flowers. */
+  function showPanel(id, revealDelay) {
+    var next = document.getElementById(id);
+    if (!next || next === currentPanel || panelBusy) return;
+
+    var prev = currentPanel;
+    currentPanel = next;
+
+    // first page of a visit — nothing to clear away
+    if (!prev) {
+      revealPanel(next, revealDelay);
+      return;
+    }
+
+    panelBusy = true;
+    prev.classList.remove('shown');
+
+    /* The next page starts arriving at once, underneath the flowers, and
+       the flowers sweep away to uncover it. Holding it back until they
+       had gone made it a fade-in on an empty page, not a reveal. */
+    if (prev.id === 'noteMain' && next.id !== 'noteMain') scatterAway();
+    revealPanel(next);
+
+    setTimeout(function () {
+      prev.classList.remove('current');
+      panelBusy = false;
+    }, 700);
+  }
+
+  function resetPanels() {
+    panelBusy = false;
+    noteBody.classList.remove('show-bed', 'decor-off');
+    ['noteMain', 'gallery', 'closing'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('current', 'shown', 'in', 'settled');
+    });
+    currentPanel = null;
+  }
+
+  // every button carrying a data-next moves you along
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-next]');
+    if (!btn) return;
+    e.preventDefault();
+    showPanel(btn.getAttribute('data-next'));
+  });
 
   /* --- one photo, opened large ---------------------------------------- */
 
@@ -1064,14 +1404,30 @@
     });
   }
 
-  // fetched up front so the words are ready before the note is opened
+  /* Fetched up front. Until the words are in hand the card cannot be
+     opened — otherwise a quick click lands on a note that has not loaded.
+     A click made while waiting is remembered and honoured the moment the
+     text arrives, rather than being thrown away. */
   var noteData = null;
+  var noteReady = false;
+  var openWhenReady = false;
+
+  function noteLoaded(data) {
+    if (noteReady) return;
+    noteData = data || NOTE_FALLBACK;
+    noteReady = true;
+
+    if (hintPending) { hintPending = false; armHint(); }
+    if (openWhenReady) { openWhenReady = false; fadeToNote(); }
+  }
 
   if (window.fetch) {
-    fetch('note.json', { cache: 'no-cache' })
+    fetch('assets/data/note.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { noteData = d || NOTE_FALLBACK; })
-      .catch(function () { noteData = NOTE_FALLBACK; });
+      .then(function (d) { noteLoaded(d); })
+      .catch(function () { noteLoaded(null); });
+  } else {
+    noteLoaded(null);            // no fetch: the built-in words will do
   }
 
   var noteEl = document.getElementById('note');

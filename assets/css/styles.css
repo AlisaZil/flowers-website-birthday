@@ -38,7 +38,35 @@ body.loading { overflow: hidden; }
 
 /* the note is a separate view, not a panel below — the flowers stand
    down entirely while it is up */
-body.on-note .viewport { display: none; }
+/* The bed stays on screen for the note, which is revealed from behind it.
+   The pages after the note are opaque and cover the whole screen, and
+   `.note-page` is position:fixed — which makes a stacking context — so
+   nothing inside it can be lifted above the bed. The bed is taken away
+   for those pages instead. */
+body.on-note .viewport { display: block; }
+body.on-note:not(.show-bed) .viewport { display: none; }
+
+/* The first card leaves the moment it is pressed: a soft fade with a
+   slight shrink, keeping its resting tilt. */
+body.card-away .note,
+body.card-away .hint {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s cubic-bezier(.22, 1, .36, 1), transform 1.2s cubic-bezier(.22, 1, .36, 1);
+}
+
+body.card-away .note,
+body.card-away .note:hover,
+body.card-away .note:focus-visible { transform: rotate(-6.2deg) scale(.96); }
+
+body.card-away .hint { transform: scale(.96); }
+
+/* the little card and its nudge give way to the letter */
+body.on-note .stage {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
 
 /* The bed fades up once the sprites are in. Guarded on .js so the page
    is never left invisible if the script fails to run. */
@@ -143,7 +171,7 @@ body {
    they are moving — see open() in script.js */
 .bloom.lift {
   will-change: transform;
-  transition: transform 1.35s cubic-bezier(.22, .9, .3, 1);
+  transition: transform 3.2s cubic-bezier(.22, 1, .36, 1);
 }
 
 .bloom img {
@@ -175,7 +203,6 @@ body {
   height: 320px;
   transform: rotate(-6.2deg);
   transform-origin: 50% 50%;
-  transition: transform 1.4s cubic-bezier(.22, .9, .3, 1);
   cursor: pointer;
   outline: none;
   filter:
@@ -256,13 +283,17 @@ body {
 
 /* --- tap to open ----------------------------------------------------- */
 
-body.opening .note {
-  transform: translateY(5%) rotate(-2.4deg) scale(1.12);
+/* On the way out they carry on past the edge of the screen. Easing in
+   rather than out, so they drift first and then gather speed as they go
+   — an ease-out curve put them off screen in a quarter of the time. */
+.bloom.sweep {
+  transition: transform 1.4s cubic-bezier(.5, 0, .78, .62);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bloom,
   .bloom.lift,
+  .bloom.sweep,
   .note,
   .js .bed-baked,
   .js .bed,
@@ -490,4 +521,47 @@ body.opening .note {
 
 @media (prefers-reduced-motion: reduce) {
   .bloom.sway img { animation: none; }
+}
+
+/* ------------------------------------------------------------------
+   A breeze through the bed. Only the flowers move: the card, the
+   writing and the ground are left alone. The animation touches
+   `transform` and nothing else, so no bloom shifts out of place — it
+   oscillates either side of where it already sits.
+
+   It rides on the <img> so the wrapper's own transform stays free for
+   the hover swell and the page turn, and it pivots low, near the stem,
+   so a head nods rather than the whole picture sliding about.
+   ------------------------------------------------------------------ */
+
+.bloom.wind img {
+  transform-origin: 50% 88%;          /* down by the base, not the middle */
+  animation: wind var(--wind-duration, 5.5s) ease-in-out
+             var(--wind-delay, 0s) infinite alternate;
+}
+
+@keyframes wind {
+  from {
+    transform:
+      translate(calc(var(--wind-distance, 2px) * -1),
+                calc(var(--wind-distance, 2px) * -0.35))
+      rotate(calc(var(--wind-angle, 1deg) * -1));
+  }
+  to {
+    transform:
+      translate(var(--wind-distance, 2px),
+                calc(var(--wind-distance, 2px) * 0.25))
+      rotate(var(--wind-angle, 1deg));
+  }
+}
+
+/* The breeze is frozen the instant the bed opens. A flower reversing its
+   sway while it is also travelling outward reads as a small twitch, and
+   it is a second transform per flower on every frame. Paused rather than
+   removed, so each one holds exactly where it was — cutting the animation
+   would snap it back to centre. */
+body.opening .bloom.wind img { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bloom.wind img { animation: none; }
 }

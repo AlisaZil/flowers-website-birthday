@@ -1,0 +1,11 @@
+{
+  "title": "little moments with you:",
+  "photos": [
+    { "src": "assets/img/photos/web/sea.jpg",       "alt": "the sea at sunset",            "note": "my favorite day" },
+    { "src": "assets/img/photos/web/ice-cream.jpg", "alt": "two ice creams held up",       "note": "" },
+    { "src": "assets/img/photos/web/flowers.jpg",   "alt": "a bouquet of pink roses",      "note": "best memory" },
+    { "src": "assets/img/photos/web/kItttty.jpg",   "alt": "a cat asleep on a cushion",    "note": "look how cute" },
+    { "src": "assets/img/photos/web/pancake.jpg",   "alt": "pancakes with berries",        "note": "" },
+    { "src": "assets/img/photos/web/pink-bike.jpg", "alt": "a pink bicycle and flowers",   "note": "love you always" }
+  ]
+}
