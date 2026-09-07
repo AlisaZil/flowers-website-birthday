@@ -25,8 +25,12 @@
   display: none;              /* the flowers hold the screen until asked */
   overflow: hidden;           /* each panel is its own page now */
   background: var(--page-pre);
-  font-family: 'Gaegu', 'Nanum Gothic Coding', ui-monospace,
-               SFMono-Regular, Menlo, Consolas, monospace;
+  /* Gaegu and Nanum carry no Hebrew, so any Hebrew on the card falls
+     through to the two faces after them and lands in the same hand as
+     the note, rather than in whatever the system offers. Latin text is
+     untouched: Gaegu still answers for it first. */
+  font-family: 'Gaegu', 'Nanum Gothic Coding', 'Gveret Levin', 'Assistant',
+               ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -468,3 +472,32 @@ letter-spacing: .08em;
 /* the note's edge blooms are a fixed layer; the pages after it show
    nothing but their ground */
 body.decor-off .note-blooms { display: none; }
+
+
+/* ------------------------------------------------------------------
+   A note written right to left. Turned on from note.json, not guessed
+   at, so an English note is left exactly as it was.
+   ------------------------------------------------------------------ */
+
+/* Neither of the hands used for the card carries Hebrew, so a Hebrew
+   note would have dropped to whatever the system offered. */
+.note-text[dir="rtl"],
+#noteTitle[dir="rtl"] {
+  font-family: 'Gveret Levin', 'Assistant', 'Gaegu',
+               system-ui, sans-serif;
+  /* the handwriting face runs small and light beside the Latin one */
+  font-size: 1.12em;
+  letter-spacing: 0;
+  line-height: 1.75;
+}
+
+.note-text[dir="rtl"] { text-align: right; }
+#noteTitle[dir="rtl"] { letter-spacing: .02em; }
+
+/* the opening name and the sign-off sit a little apart from the body */
+.note-text[dir="rtl"] [data-id="opening"] .note-line:first-child {
+  font-size: 1.15em;
+  font-weight: 700;
+}
+
+.note-text[dir="rtl"] [data-id="close"] { margin-bottom: 0; }

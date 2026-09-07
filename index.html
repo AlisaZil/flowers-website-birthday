@@ -11,6 +11,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<!-- Hebrew: none of the hands above carry Hebrew glyphs, so the note
+     would have fallen back to the system font. Gveret Levin is a Hebrew
+     handwriting face; Assistant is the legible standby behind it. -->
+<link href="https://fonts.googleapis.com/css2?family=Gveret+Levin&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
 <link rel="stylesheet" href="assets/css/note.css">
 <link rel="stylesheet" href="assets/css/gallery.css">
@@ -63,7 +67,7 @@
 
     <div class="note" id="note" role="button" tabindex="0"
          aria-label="Open the letter">
-      <img class="note-paper" src="assets/img/ui/note-blank.png" alt="" draggable="false">
+      <img class="note-paper" src="assets/img/ui/note-paper.jpg" alt="" draggable="false">
 
       <img class="girl" src="assets/img/ui/girl.png" alt="" draggable="false">
 
@@ -215,7 +219,7 @@
 
 
     <button class="page-btn" data-next="gallery" type="button">
-      my favourite moments
+       תמונות שולר שלח לי
       <svg class="page-btn-icon" viewBox="0 0 18 16" aria-hidden="true">
         <path d="M1.5 8 L16 8 M10 2 L16.5 8 L10 14"/>
       </svg>
@@ -229,10 +233,18 @@
   <section class="panel gallery-panel" id="gallery">
 
 
+    <!-- carnations at the four corners only -->
+    <div class="gal-side" aria-hidden="true">
+      <img src="assets/img/flowers/f02.png" style="--gx:-3%;  --gy:-2%;  --gw:16%; --gr:-22deg" alt="">
+      <img src="assets/img/flowers/f01.png" style="--gx:101%; --gy:-3%;  --gw:17%; --gr:20deg"  alt="">
+      <img src="assets/img/flowers/f04.png" style="--gx:-4%;  --gy:101%; --gw:17%; --gr:-152deg" alt="">
+      <img src="assets/img/flowers/f02.png" style="--gx:102%; --gy:102%; --gw:16%; --gr:150deg" alt="">
+    </div>
+
     <div class="gal-stage">
       <!-- the title, in a speech bubble -->
       <div class="gal-title-bubble">
-        <span id="galleryTitle">little moments with you:</span>
+        <span id="galleryTitle">תמונות שולר שלח לי:</span>
         <svg class="bub-heart" viewBox="0 0 32 29" aria-hidden="true"><use href="#hrt-solid"/></svg>
       </div>
 
@@ -240,8 +252,80 @@
       <div class="shots" id="shots"></div>
     </div>
 
-    <button class="page-btn gallery-next" data-next="closing" type="button">
-      one last thing
+    <button class="page-btn gallery-next" data-next="video" type="button">
+      סרטון
+      <svg class="page-btn-icon" viewBox="0 0 18 16" aria-hidden="true">
+        <path d="M1.5 8 L16 8 M10 2 L16.5 8 L10 14"/>
+      </svg>
+    </button>
+  </section>
+
+
+  <!-- a video, a scroll below the gallery -->
+  <section class="panel video-panel" id="video">
+
+    <!-- carnations at the four corners only -->
+    <div class="gal-side" aria-hidden="true">
+      <img src="assets/img/flowers/f03.png" style="--gx:-3%;  --gy:-2%;  --gw:16%; --gr:-18deg" alt="">
+      <img src="assets/img/flowers/f06.png" style="--gx:101%; --gy:-3%;  --gw:17%; --gr:24deg"  alt="">
+      <img src="assets/img/flowers/f01.png" style="--gx:-4%;  --gy:101%; --gw:17%; --gr:-148deg" alt="">
+      <img src="assets/img/flowers/f04.png" style="--gx:102%; --gy:102%; --gw:16%; --gr:154deg" alt="">
+    </div>
+
+    <div class="vid-stage">
+      <!-- the title, in a speech bubble -->
+      <div class="gal-title-bubble vid-title">
+        <span>שאת נוחרת</span>
+        <svg class="bub-heart" viewBox="0 0 32 29" aria-hidden="true"><use href="#hrt-solid"/></svg>
+      </div>
+
+      <div class="vid-frame" id="vidFrame">
+        <video class="vid-el" id="vidEl" playsinline preload="metadata"
+               src="assets/img/video/sonia-sleep.mp4"></video>
+
+        <!-- the big play badge, over the picture while it is stopped -->
+        <button class="vid-badge" id="vidBadge" type="button" aria-label="Play the video">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 L18.5 12 L8 18.5 Z"/></svg>
+        </button>
+
+        <!-- the controls, along the bottom lip -->
+        <div class="vid-bar">
+          <button class="vid-btn vid-play" id="vidPlay" type="button" aria-label="Play">
+            <svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 L18.5 12 L8 18.5 Z"/></svg>
+            <svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 h3.2 v13 h-3.2 Z M12.8 5.5 h3.2 v13 h-3.2 Z"/></svg>
+          </button>
+
+          <input class="vid-seek" id="vidSeek" type="range" min="0" max="1000" value="0"
+                 aria-label="Seek">
+
+          <span class="vid-time"><span id="vidNow">0:00</span> / <span id="vidTotal">0:00</span></span>
+
+          <button class="vid-btn vid-mute" id="vidMute" type="button" aria-label="Mute">
+            <svg class="ic-loud" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9.5 h3.5 L12 5.5 v13 L7.5 14.5 H4 Z"/>
+              <path class="wv" d="M15 9.2 a4 4 0 0 1 0 5.6 M17.6 6.8 a7.4 7.4 0 0 1 0 10.4"/>
+            </svg>
+            <svg class="ic-muted" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9.5 h3.5 L12 5.5 v13 L7.5 14.5 H4 Z"/>
+              <path class="wv" d="M15.5 9.5 L20.5 14.5 M20.5 9.5 L15.5 14.5"/>
+            </svg>
+          </button>
+
+          <button class="vid-btn vid-full" id="vidFull" type="button" aria-label="Full screen">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path class="wv" d="M4 9 V4 h5 M15 4 h5 v5 M20 15 v5 h-5 M9 20 H4 v-5"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- two paper stickers, pinned to the frame -->
+        <span class="vid-sticker vid-heart" aria-hidden="true"></span>
+        <span class="vid-sticker vid-flower" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <button class="page-btn video-next" data-next="closing" type="button">
+      ודבר אחרון
       <svg class="page-btn-icon" viewBox="0 0 18 16" aria-hidden="true">
         <path d="M1.5 8 L16 8 M10 2 L16.5 8 L10 14"/>
       </svg>
@@ -266,6 +350,15 @@
       </button>
     </div>
   </section>
+
+  <!-- On a phone a page can be taller than the screen. This sits outside
+       the panels, so it holds still while one scrolls under it, and shows
+       itself only while there is more of the page left to see. -->
+  <button class="scroll-cue" id="scrollCue" type="button" aria-label="Scroll down for more">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 9.5 L12 15.5 L18 9.5"/>
+    </svg>
+  </button>
 
 </main>
 

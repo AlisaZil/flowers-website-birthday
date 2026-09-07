@@ -167,10 +167,10 @@ body {
 /* promoted only while it is actually moving */
 .bloom.swell { will-change: transform; }
 
-/* only the blooms that actually move get promoted, and only while
-   they are moving — see open() in script.js */
+/* No will-change here on purpose. Promoting ~150 filtered blooms to their
+   own compositor layers measured far worse than leaving them alone: the
+   median frame went from 17ms to 66ms. */
 .bloom.lift {
-  will-change: transform;
   transition: transform 3.2s cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -286,6 +286,11 @@ body {
 /* On the way out they carry on past the edge of the screen. Easing in
    rather than out, so they drift first and then gather speed as they go
    — an ease-out curve put them off screen in a quarter of the time. */
+/* While the bed is being put back to how it started, nothing animates —
+   otherwise you watch it rewind. */
+body.resetting .bloom,
+body.resetting .bloom img { transition: none !important; }
+
 .bloom.sweep {
   transition: transform 1.4s cubic-bezier(.5, 0, .78, .62);
 }

@@ -1,45 +1,32 @@
 {
-  "title": "a birthday note",
+  "title": "ברכה",
+  "dir": "rtl",
   "sections": [
     {
       "id": "opening",
       "heading": null,
       "lines": [
-        "happy birthday to you!"
+        "סוניה",
+        "הרבה מזל טוב"
       ]
     },
     {
-      "id": "today",
-      "heading": "for today",
+      "id": "body",
+      "heading": null,
       "lines": [
-        "I hope today is filled with all the little things that make you smile — the good coffee, the song that comes on at exactly the right moment, the message from someone you were just thinking about.",
-        "you deserve so much joy, love, and happiness. not just today, but the whole year ahead of it."
-      ]
-    },
-    {
-      "id": "thank-you",
-      "heading": "thank you",
-      "lines": [
-        "thank you for being you.",
-        "for the way you listen properly instead of waiting to talk. for remembering the small things nobody else remembers. for showing up, again and again, even when it would have been easier not to.",
-        "you mean a lot. more than gets said out loud often enough."
-      ]
-    },
-    {
-      "id": "this-year",
-      "heading": "this year",
-      "lines": [
-        "here's to a year that is kind to you.",
-        "to plans that actually happen, and to the good afternoons that were never planned at all. to feeling proud of yourself for something. to rest when you need it and not feeling guilty about taking it.",
-        "and to more moments where you catch yourself thinking — this is nice, I'm glad I'm here."
+        "אין לי הרבה מה לכתוב, כי זה לא הצד החזק שלי.",
+        "מאחלת לך הרבה הצלחה בחיים, הרבה הצלחה בעבודה, ושתגשימי את כל מה שאת רוצה.",
+        "בין אם זו עבודה, משפחה, זוגיות, או הרצון להיות מצליחה וידועה — מאחלת לך שתצליחי בכל דבר שתשימי בו את הלב שלך.",
+        "יש לך המון יצירתיות, ועם מה שקיבלת מהבית גם המון יכולת.",
+        "לא משנה איפה את נמצאת בחיים — זאת רק ההתחלה."
       ]
     },
     {
       "id": "close",
       "heading": null,
       "lines": [
-        "have the best day ever!",
-        "love you lots ♥"
+        "המון מזל טוב,",
+        "אליסה ♥"
       ]
     }
   ]

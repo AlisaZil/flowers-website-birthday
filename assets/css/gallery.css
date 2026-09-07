@@ -3,14 +3,29 @@
    and a handful of captions in speech bubbles.
    ------------------------------------------------------------------ */
 
+/* One scale for both of the pages below. Everything on them is laid out
+   as a share of this, so a window that is short and wide shrinks the
+   composition rather than pushing half of it off the bottom. The vh term
+   is what keeps a landscape monitor honest; the vw term, a phone. */
+.gallery-panel,
+.video-panel {
+  --pile: min(1340px, 96vw, 148vh);
+  /* what is left for the film once the title and the button have taken
+     their share of the window */
+  --film-h: 58vh;
+}
+
 .gallery-panel {
   --bub-light:   #FBD3DF;   /* an ordinary caption */
   --bub-dark:    #8E2C45;   /* the one that stands out */
   --bub-ink:     #8E2C45;
   --print:       #FFFDFA;   /* the paper the photos are printed on */
 
-  /* position and layout come from .panel — it is stacked, not in flow */
-  overflow: hidden;
+  /* position and layout come from .panel — it is stacked, not in flow.
+     Only the sideways overflow is hidden, for the corner blooms; hiding
+     both axes here beat .panel's overflow-y: auto and left a page taller
+     than the phone with no way to scroll to the rest of it. */
+  overflow-x: hidden;
   /* No ground of its own: the note view's is already behind, and the
      flowers sweeping away have to uncover the gallery rather than the
      gallery covering them. */
@@ -23,7 +38,9 @@
 .gal-stage {
   position: relative;
   z-index: 2;
-  width: min(1340px, 96%);
+  /* --pile is measured against the window; 100% keeps it inside the
+     panel's own padding, so the margins either side stay equal. */
+  width: min(var(--pile), 100%);
   margin-inline: auto;
 }
 
@@ -31,6 +48,8 @@
 
 .gal-title-bubble {
   position: relative;
+  /* over every print, including one lifted to 40 by hover */
+  z-index: 60;
   display: inline-flex;
   align-items: center;
   gap: .45em;
@@ -40,7 +59,7 @@
   border-radius: clamp(20px, 3.4vmin, 34px);
   background: var(--bub-light);
   color: var(--bub-ink);
-  font-family: 'Gaegu', 'Nanum Gothic Coding', cursive;
+  font-family: 'Gaegu', 'Nanum Gothic Coding', 'Gveret Levin', 'Assistant', cursive;
   font-size: clamp(22px, 4.4vmin, 46px);
   font-weight: 700;
   line-height: 1.15;
@@ -66,7 +85,11 @@
 
 .shots {
   position: relative;
-  height: clamp(320px, 46vh, 560px);
+  /* Tied to --pile, not to vh. Print widths are a share of the stage
+     width, so their heights are too; sizing this box off the viewport
+     instead let the two drift apart, and on a short window the pile grew
+     taller than its box and climbed into the title and the button. */
+  height: calc(var(--pile) * 0.375);
   /* The prints overhang the top of this box, which left the pile sitting
      high; this drops it onto the middle of the screen without moving the
      title or the button. */
@@ -125,7 +148,7 @@
   border-radius: 999px;
   background: var(--bub-light);
   color: var(--bub-ink);
-  font-family: 'Gaegu', 'Nanum Gothic Coding', cursive;
+  font-family: 'Gaegu', 'Nanum Gothic Coding', 'Gveret Levin', 'Assistant', cursive;
   font-size: clamp(13px, 2.05vmin, 22px);
   font-weight: 700;
   white-space: nowrap;
@@ -151,35 +174,61 @@
 
 /* --- narrow screens: the pile becomes a simple column ---------------- */
 
+/* --- narrow screens: the pile becomes two columns -------------------- */
+
 @media (max-width: 780px) {
+  /* the title sits over the middle here, not off to one side */
+  .gal-stage { text-align: center; }
+  .gal-title-bubble {
+    max-width: 100%;
+    margin-bottom: clamp(16px, 4vw, 30px);
+  }
+
   .shots {
     height: auto;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: clamp(14px, 4vw, 26px);
+    gap: clamp(16px, 4.5vw, 30px);
     justify-items: center;
+    /* Each print keeps its own height — stretched to the row, a landscape
+       shot sat in a tall frame with a thick white band above and below —
+       and a short one rides the middle of its row rather than the top. */
+    align-items: center;
+    /* the pile's nudge downwards belongs to the scattered layout only */
+    transform: none;
+    text-align: initial;
   }
 
   .shot {
     position: relative;
     left: auto;
     top: auto;
-    width: 100%;
+    /* short of the full column, so a print's rotated corners stay clear of
+       the screen edge instead of being cut off by the panel */
+    width: 96%;
+    align-self: center;
+    /* a wider paper border, in proportion with the bigger prints */
+    padding: clamp(7px, 2vw, 12px);
+    padding-bottom: clamp(14px, 4vw, 24px);
     transform: rotate(var(--sr, 0deg));
   }
 
   .shot:hover,
   .shot:focus-visible { transform: rotate(var(--sr, 0deg)) scale(1.02); }
 
-  .shot-note {
-    left: 50%;
-    top: auto;
-    bottom: -.7em;
-    transform: translateX(-50%) rotate(var(--nr, 0deg));
-  }
+  /* The bubbles hang off a print's corner in the pile. In a column there
+     is no corner to hang from, and all of them landed in a heap at the
+     foot of the grid — the caption travels with the photo instead, into
+     the lightbox, when one is tapped. */
+  .shot-note { display: none; }
 
-  .gal-sticker { display: none; }
-  .gal-title-bubble { max-width: 100%; }
+  /* The paper stickers, tucked into the gaps between the prints. Their
+     places in the pile are written onto the elements themselves, so the
+     column's own places have to out-rank an inline style. */
+  .gal-sticker { display: block; }
+  .gal-sticker--0 { --kx: 49% !important; --ky: 74% !important; --kw: 9%   !important; --kr: -10deg !important; }
+  .gal-sticker--1 { --kx: 48% !important; --ky: 13% !important; --kw: 9.5% !important; --kr: 10deg  !important; }
+  .gal-sticker--2 { --kx: 95% !important; --ky: 94% !important; --kw: 9%   !important; --kr: 14deg  !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -528,7 +577,9 @@
 .note-panel .page-btn { margin-top: clamp(14px, 2.6vmin, 28px); }
 
 /* the gallery's has to clear the prints overhanging the pile box */
-.gallery-next { margin-top: clamp(68px, 9vmin, 112px); }
+/* The pile overhangs the bottom of its box by about a tenth of --pile,
+   so the gap under it has to be measured in the same unit. */
+.gallery-next { margin-top: calc(var(--pile) * 0.105); }
 
 @media (prefers-reduced-motion: reduce) {
   .page-btn { transition-duration: .01ms; }
@@ -645,4 +696,416 @@
               box-shadow .4s ease,
               opacity .4s ease;
   transition-delay: 0s;
+  place-content: center;
+}
+
+/* --- carnations at the corners -------------------------------------- */
+
+.gal-side {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gal-side img {
+  position: absolute;
+  left: var(--gx);
+  top: var(--gy);
+  width: var(--gw);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(var(--gr, 0deg));
+  opacity: .92;
+}
+
+@media (max-width: 780px) {
+  /* two corners only, or they crowd the column of prints */
+  /* both across the top; the bottom-left one is behind the first print */
+  .gal-side img:nth-child(3) { display: none; }
+  /* larger, so they still read as a frame on a narrow screen */
+  .gal-side img { width: calc(var(--gw) * 1.9); }
+}
+
+/* --- the caption inside the print, on hover --------------------------- */
+
+.shot-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 .5em;
+  height: clamp(16px, 2.6vmin, 30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bub-dark);
+  font-family: 'Gaegu', 'Nanum Gothic Coding', 'Gveret Levin', 'Assistant', cursive;
+  font-size: clamp(11px, 1.55vmin, 18px);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity .3s ease;
+  pointer-events: none;
+}
+
+/* room for it in the print's lower lip */
+.shot.has-cap { padding-bottom: clamp(20px, 3.1vmin, 36px); }
+
+.gallery-panel.in .shot:hover .shot-cap,
+.gallery-panel.in .shot:focus-visible .shot-cap { opacity: 1; }
+
+/* its floating bubble steps aside so the words are not said twice */
+.gallery-panel.in .shot:hover + .shot-note,
+.gallery-panel.in .shot:focus-visible + .shot-note { opacity: 0; }
+
+
+/* ------------------------------------------------------------------
+   The video page: one film in a paper frame, with the same speech
+   bubble and paper stickers the gallery uses.
+   ------------------------------------------------------------------ */
+
+.video-panel {
+  --bub-light:   #FBD3DF;
+  --bub-dark:    #8E2C45;
+  --bub-ink:     #8E2C45;
+  --print:       #FFFDFA;
+  --vid-line:    #7C2038;   /* the drawn edge around the frame */
+  --vid-bar:     #FFFDFA;   /* the paper the controls sit on */
+
+  overflow-x: hidden;
+  background: transparent;
+}
+
+.vid-stage {
+  position: relative;
+  z-index: 2;
+  width: min(980px, var(--pile), 100%);
+  margin-inline: auto;
+}
+
+/* the title sits above the frame, and over it if they ever meet */
+.vid-title {
+  z-index: 60;
+  margin-left: clamp(4px, 1.5vmin, 18px);
+}
+
+/* --- the frame ------------------------------------------------------- */
+
+.vid-frame {
+  position: relative;
+  /* replaced by the film's own proportions once its metadata arrives */
+  aspect-ratio: var(--vr, 1 / 1);
+  /* A tall film is capped by height and a wide one by width, so either
+     shape fits the window without the page having to scroll. */
+  max-height: var(--film-h);
+  max-width: 100%;
+  margin-inline: auto;
+  padding: clamp(6px, 1vmin, 12px);
+  padding-bottom: 0;
+  border: 2px solid var(--vid-line);
+  border-radius: clamp(12px, 1.8vmin, 20px);
+  background: var(--vid-bar);
+  box-shadow: 0 14px 34px rgba(150, 92, 112, .22),
+              0 3px 8px rgba(150, 92, 112, .16);
+  /* No clipping here: the two stickers are pinned half off the frame and
+     have to hang over the edge. The picture and the bar round their own
+     outer corners instead. */
+  display: flex;
+  flex-direction: column;
+}
+
+.vid-el {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  object-fit: cover;
+  border-radius: clamp(6px, 1vmin, 12px) clamp(6px, 1vmin, 12px) 0 0;
+  background: #EFD6DD;
+}
+
+/* --- the play badge over a stopped picture --------------------------- */
+
+.vid-badge {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - clamp(14px, 2.2vmin, 24px));
+  width: clamp(56px, 9vmin, 92px);
+  height: clamp(56px, 9vmin, 92px);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #FDF6EE;
+  color: var(--vid-line);
+  box-shadow: 0 8px 20px rgba(120, 60, 80, .26);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.25, .8, .35, 1), opacity .25s ease;
+}
+
+.vid-badge svg { width: 42%; height: 42%; fill: currentColor; margin-left: 8%; }
+
+.vid-badge:hover,
+.vid-badge:focus-visible { transform: translate(-50%, -50%) scale(1.07); }
+.vid-badge:focus-visible { outline: 3px solid var(--vid-line); outline-offset: 4px; }
+
+/* out of the way while it is playing, and out of reach with it */
+.vid-frame.playing .vid-badge {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.8);
+  pointer-events: none;
+}
+
+/* --- the control bar -------------------------------------------------- */
+
+.vid-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.4vmin, 16px);
+  padding: clamp(7px, 1.2vmin, 13px) clamp(8px, 1.4vmin, 16px);
+  background: var(--vid-bar);
+  color: var(--vid-line);
+  border-radius: 0 0 clamp(10px, 1.6vmin, 18px) clamp(10px, 1.6vmin, 18px);
+}
+
+.vid-btn {
+  flex: none;
+  width: clamp(22px, 2.8vmin, 30px);
+  height: clamp(22px, 2.8vmin, 30px);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+.vid-btn:hover { transform: scale(1.12); }
+.vid-btn:focus-visible { outline: 2.5px solid var(--vid-line); outline-offset: 3px; }
+.vid-btn svg { width: 100%; height: 100%; fill: currentColor; }
+
+/* the strokes inside the speaker and the frame corners stay strokes */
+.vid-btn svg .wv {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* one icon at a time, in each of the two toggles */
+.vid-play .ic-pause,
+.vid-frame.playing .vid-play .ic-play { display: none; }
+.vid-frame.playing .vid-play .ic-pause { display: block; }
+
+.vid-mute .ic-muted,
+.vid-frame.muted .vid-mute .ic-loud { display: none; }
+.vid-frame.muted .vid-mute .ic-muted { display: block; }
+
+/* --- the seek bar ----------------------------------------------------- */
+
+.vid-seek {
+  flex: 1 1 auto;
+  min-width: 40px;
+  height: clamp(16px, 2vmin, 22px);
+  margin: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.vid-seek:focus-visible { outline: 2.5px solid var(--vid-line); outline-offset: 2px; border-radius: 999px; }
+
+/* the played part is painted into the groove, so one rule serves both
+   engines rather than Firefox's separate progress element */
+.vid-seek::-webkit-slider-runnable-track {
+  height: clamp(6px, .9vmin, 9px);
+  border-radius: 999px;
+  background:
+    linear-gradient(#F7A8C0, #F7A8C0) 0 / var(--played, 0%) 100% no-repeat,
+    #F3E4E8;
+}
+
+.vid-seek::-moz-range-track {
+  height: clamp(6px, .9vmin, 9px);
+  border-radius: 999px;
+  background:
+    linear-gradient(#F7A8C0, #F7A8C0) 0 / var(--played, 0%) 100% no-repeat,
+    #F3E4E8;
+}
+
+.vid-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: clamp(13px, 1.7vmin, 18px);
+  height: clamp(13px, 1.7vmin, 18px);
+  margin-top: calc((clamp(6px, .9vmin, 9px) - clamp(13px, 1.7vmin, 18px)) / 2);
+  border: 0;
+  border-radius: 50%;
+  background: #F489AB;
+  box-shadow: 0 1px 3px rgba(120, 60, 80, .3);
+}
+
+.vid-seek::-moz-range-thumb {
+  width: clamp(13px, 1.7vmin, 18px);
+  height: clamp(13px, 1.7vmin, 18px);
+  border: 0;
+  border-radius: 50%;
+  background: #F489AB;
+  box-shadow: 0 1px 3px rgba(120, 60, 80, .3);
+}
+
+.vid-time {
+  flex: none;
+  font-family: 'Gaegu', 'Nanum Gothic Coding', 'Gveret Levin', 'Assistant', cursive;
+  font-size: clamp(13px, 1.9vmin, 21px);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--vid-line);
+}
+
+/* --- the two paper stickers on the frame ------------------------------ */
+
+.vid-sticker {
+  position: absolute;
+  width: clamp(34px, 5vmin, 58px);
+  height: clamp(34px, 5vmin, 58px);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgba(150, 92, 112, .26));
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
+/* pinned over the top-right corner, half off the frame */
+.vid-heart {
+  right: -1.6%;
+  top: -4%;
+  transform: rotate(12deg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 33'%3E%3Cpath d='M18 31C18 31 2.5 22 2.5 11.6 2.5 6.3 6.6 2.5 11.2 2.5c3 0 5.5 1.6 6.8 4 1.3-2.4 3.8-4 6.8-4 4.6 0 8.7 3.8 8.7 9.1C33.5 22 18 31 18 31Z' fill='%23F7A8C0'/%3E%3Ccircle cx='15' cy='13' r='1.7' fill='%23FFF1F5'/%3E%3Ccircle cx='21' cy='13' r='1.7' fill='%23FFF1F5'/%3E%3C/svg%3E");
+}
+
+/* and one on the bottom-left, over the corner of the control bar */
+.vid-flower {
+  left: -2.2%;
+  bottom: -3%;
+  transform: rotate(-10deg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='%23FFF9F0'%3E%3Cellipse cx='20' cy='9' rx='7' ry='8'/%3E%3Cellipse cx='31' cy='16' rx='7' ry='8' transform='rotate(72 31 16)'/%3E%3Cellipse cx='27' cy='30' rx='7' ry='8' transform='rotate(144 27 30)'/%3E%3Cellipse cx='13' cy='30' rx='7' ry='8' transform='rotate(216 13 30)'/%3E%3Cellipse cx='9' cy='16' rx='7' ry='8' transform='rotate(288 9 16)'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='5' fill='%23F2D9A8'/%3E%3Ccircle cx='18' cy='19' r='1.1' fill='%23D8B87E'/%3E%3Ccircle cx='22' cy='21' r='1.1' fill='%23D8B87E'/%3E%3C/svg%3E");
+}
+
+/* clear of the frame, the same way the gallery clears its pile */
+.video-next { margin-top: clamp(22px, 3.4vmin, 44px); }
+
+/* --- arriving on the page --------------------------------------------- */
+
+.js .video-panel .vid-title,
+.js .video-panel .vid-frame {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22, 1, .36, 1);
+}
+
+.js .video-panel .vid-title { transition-delay: .45s; }
+.js .video-panel .vid-frame { transition-delay: .7s; }
+
+.video-panel.in .vid-title,
+.video-panel.in .vid-frame { opacity: 1; transform: none; }
+
+/* once it has arrived the delays are dropped, so hover answers at once */
+.video-panel.settled .vid-title,
+.video-panel.settled .vid-frame { transition-delay: 0s; }
+
+@media (max-width: 780px) {
+  .vid-stage { width: 100%; }
+  .vid-frame { max-height: 54vh; }
+  /* the clock is the first thing to go when the bar runs out of room */
+  .vid-time { font-size: 13px; }
+}
+
+@media (max-width: 430px) {
+  .vid-time { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vid-badge, .vid-btn { transition-duration: .01ms; }
+  .js .video-panel .vid-title,
+  .js .video-panel .vid-frame {
+    opacity: 1;
+    transform: none;
+    transition-duration: .01ms;
+    transition-delay: 0s;
+  }
+}
+
+
+/* ------------------------------------------------------------------
+   The scroll cue: on a narrow screen the gallery is taller than the
+   window, and nothing at the fold said so.
+   ------------------------------------------------------------------ */
+
+.scroll-cue {
+  /* hidden on a wide screen, where the pages fit as they are */
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(clamp(10px, 2.5vmin, 22px) + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 253, 250, .92);
+  color: #8E2C45;
+  box-shadow: 0 4px 12px rgba(150, 92, 112, .28);
+  cursor: pointer;
+  /* out of the way, and out of reach, until there is more to see */
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+.scroll-cue svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 780px) {
+  .scroll-cue { display: grid; }
+
+  .scroll-cue.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    animation: cue-bob 1.7s ease-in-out infinite;
+  }
+}
+
+/* a small nudge downwards, the way a finger would go */
+@keyframes cue-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue { transition-duration: .01ms; }
+  .scroll-cue.show { animation: none; }
 }

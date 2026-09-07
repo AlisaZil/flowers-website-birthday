@@ -37,7 +37,7 @@
 
   document.body.classList.add('loading');
 
-  var ASSETS = ['assets/img/ui/note-blank.png', 'assets/img/ui/girl.png'];
+  var ASSETS = ['assets/img/ui/note-paper.jpg', 'assets/img/ui/girl.png'];
   for (var n = 1; n <= 12; n++) {
     ASSETS.push('assets/img/flowers/f' + (n < 10 ? '0' : '') + n + '.png');
   }
@@ -177,9 +177,15 @@
       });
     }
   }
-  window.addEventListener('resize', fit);
-  window.addEventListener('orientationchange', fit);
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+  var fitTimer = null;
+  function fitSoon() {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fit, 180);   // replanting is heavy; wait for the
+  }                                    // drag to settle
+
+  window.addEventListener('resize', fitSoon);
+  window.addEventListener('orientationchange', fitSoon);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitSoon);
   // web fonts and the flower images can land after first paint
   window.addEventListener('load', fit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
@@ -217,11 +223,11 @@
      that end actually falls and tuck a face-on bloom over it.
      ar = height/width of the sprite, tip = the cut end in sprite fractions. */
   var TIPS = {
-    f03: { ar: 0.891, tip: [0.411, 0.993] },
-    f05: { ar: 0.977, tip: [0.079, 0.899] },
-    f06: { ar: 1.097, tip: [0.007, 0.908] },
-    f07: { ar: 0.907, tip: [0.741, 0.990] },
-    f08: { ar: 1.148, tip: [0.072, 0.994] }
+    f03: { ar: 0.904, tip: [0.400, 0.925] },
+    f05: { ar: 0.980, tip: [0.132, 0.848] },
+    f06: { ar: 1.084, tip: [0.077, 0.855] },
+    f07: { ar: 0.918, tip: [0.718, 0.922] },
+    f08: { ar: 1.128, tip: [0.137, 0.934] }
   };
 
   function makeBloom(opts) {
@@ -232,8 +238,11 @@
     img.alt = '';
     img.draggable = false;
     img.decoding = 'async';   // keeps decoding off the main thread
+    /* The drop-shadow is baked into the sprite itself. Asking the browser
+       for it here meant an offscreen blur per flower, per frame, across a
+       bed that overlaps heavily — much the most expensive thing on the
+       page. Only the cheap colour tweaks are left. */
     img.style.filter =
-      'drop-shadow(0 6px 10px rgba(190,66,96,.22)) ' +
       'hue-rotate(' + opts.hue.toFixed(1) + 'deg) ' +
       'brightness(' + opts.bright.toFixed(3) + ') ' +
       'saturate(' + opts.sat.toFixed(3) + ')';
@@ -502,7 +511,6 @@
       ctx.translate(cx, cy);
       ctx.rotate(o.rot * Math.PI / 180);
       ctx.filter =
-        'drop-shadow(0 6px 10px rgba(190,66,96,.22)) ' +
         'hue-rotate(' + o.hue.toFixed(1) + 'deg) ' +
         'brightness(' + o.bright.toFixed(3) + ') ' +
         'saturate(' + o.sat.toFixed(3) + ')';
@@ -688,7 +696,7 @@
      so what opens up is more flowers rather than bare ground. */
 
   var EDGE_OVERLAP = 18;      // how far petals may still lap over the card
-  var SOLID = 0.40;           // the sprite's painted part, as a share of its box
+  var SOLID = 0.43;           // the sprite's painted part, as a share of its box
   var OUTER_DRIFT = 40;       // blooms already clear ease outward a touch
 
   /* The flowers open outward from the middle, far enough to uncover the
@@ -875,6 +883,7 @@
 
   /* The bloom's own movement runs ~1.35s, so the veil now starts while
      it is still settling rather than after a pause. */
+  var BLOOM_TRAVEL_MS = 3200;  // matches .bloom.lift's transition
   var CARD_REVEAL_MS = 500;   // the next card starts while the bed is still opening
   var BLOOM_VIEW_MS = 1150;   // time to watch the bloom before the fade
   var VEIL_IN_MS    = 450;    // matches the .veil transition
@@ -909,13 +918,42 @@
     });
   }
 
+  /* Going back to the flowers puts the bed exactly as it was on arrival:
+     every bloom returned to its resting angle, the ones carried off the
+     screen brought back, the breeze running again, and the opening armed
+     to play once more. Transitions are switched off for the moment it
+     takes, so it resets rather than visibly rewinding. */
+  function resetBed() {
+    noteBody.classList.add('resetting');
+
+    [bed, bedFront].forEach(function (layer) {
+      var kids = layer.children;
+      for (var i = 0; i < kids.length; i++) {
+        var el = kids[i];
+        el.classList.remove('lift', 'sweep', 'swell');
+        el.style.transitionDelay = '';
+        el.style.visibility = '';
+        el.style.transform = 'rotate(' + el._rot.toFixed(1) + 'deg)';
+        if (el._hold)   { clearTimeout(el._hold);   el._hold = null; }
+        if (el._settle) { clearTimeout(el._settle); el._settle = null; }
+      }
+    });
+
+    lifted = [];
+    opened = false;                       // the bloom may happen again
+    noteBody.classList.remove('opening'); // and the breeze picks back up
+
+    void bed.offsetHeight;                // land it before transitions return
+    noteBody.classList.remove('resetting');
+  }
+
   function closeNote() {
     notePage.classList.remove('active', 'in-view');
     resetPanels();               // next visit starts on the note again
     noteBody.classList.remove('on-note');
 
-    // the flowers stay where they opened — never reset, never replayed
     noteBody.classList.remove('card-away');
+    resetBed();                  // back to exactly how it started
 
     // let the nudge earn its place again
     hintShown = hintQueued = false;
@@ -948,6 +986,7 @@
        still moving. */
     openNote(CARD_REVEAL_MS);
     setOpen(true);
+    setTimeout(retireOffscreen, BLOOM_TRAVEL_MS + 900);
 
     setTimeout(function () { travelling = false; }, 2500);
   }
@@ -1015,6 +1054,20 @@
 
     if (data.title && titleEl) titleEl.textContent = data.title;
 
+    /* A right-to-left note is marked in the data rather than guessed at,
+       so the sheet turns round with it — the text, the heading rules and
+       the punctuation at the end of every line. */
+    var sheet = textEl.closest('.sheet') || textEl.parentNode;
+    if (data.dir === 'rtl') {
+      textEl.setAttribute('dir', 'rtl');
+      if (titleEl) titleEl.setAttribute('dir', 'rtl');
+      if (sheet) sheet.classList.add('rtl');
+    } else {
+      textEl.removeAttribute('dir');
+      if (titleEl) titleEl.removeAttribute('dir');
+      if (sheet) sheet.classList.remove('rtl');
+    }
+
     var frag = document.createDocumentFragment();
 
     data.sections.forEach(function (sec, i) {
@@ -1060,10 +1113,10 @@
      of them in gallery.json; anything past MAX is ignored, and the pile
      is arranged to suit however many there are. */
   var MIN_PHOTOS = 3;
-  var MAX_PHOTOS = 6;
+  var MAX_PHOTOS = 8;
 
   /* A hand-made scatter for each count, in percentages of the stage, so
-     three photos sit as comfortably as six. `note` is where a caption
+     three photos sit as comfortably as eight. `note` is where a caption
      bubble hangs off the print, if that photo has one. */
   var LAYOUTS = {
     3: [
@@ -1091,6 +1144,25 @@
       { x: '70.4%', y: '24.1%', w: '22%', r: '3deg',  ar: '5 / 4', z: 6, note: { x: '87.4%', y: '17.6%', r: '2deg' } },
       { x: '59.8%', y: '69.4%', w: '25%', r: '-1deg', ar: '5 / 4', z: 7 },
       { x: '83.7%', y: '56.5%', w: '20%', r: '2deg',  ar: '4 / 5', z: 5, note: { x: '82.0%', y: '93.2%', r: '1deg' } }
+    ],
+    7: [
+      { x: '17.0%', y: '42.0%', w: '20%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '12.0%', y: '78.0%', r: '-2deg' } },
+      { x: '35.0%', y: '30.0%', w: '19%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '52.5%', y: '36.0%', w: '20%', r: '-2deg', ar: '4 / 5', z: 4 },
+      { x: '71.0%', y: '28.0%', w: '19%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '87.0%', y: '9.0%', r: '2deg', dark: true } },
+      { x: '87.0%', y: '44.0%', w: '19%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '88.0%', y: '87.0%', r: '1deg' } },
+      { x: '29.0%', y: '71.0%', w: '20%', r: '2deg',  ar: '5 / 4', z: 7 },
+      { x: '54.0%', y: '72.0%', w: '19%', r: '-3deg', ar: '4 / 5', z: 8 }
+    ],
+    8: [
+      { x: '16.0%', y: '42.0%', w: '18%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '11.5%', y: '78.0%', r: '-2deg' } },
+      { x: '33.0%', y: '30.0%', w: '17%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '50.5%', y: '36.0%', w: '18%', r: '-2deg', ar: '4 / 5', z: 4 },
+      { x: '68.0%', y: '28.0%', w: '17%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '84.5%', y: '9.0%', r: '2deg', dark: true } },
+      { x: '85.0%', y: '44.0%', w: '17%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '86.0%', y: '87.0%', r: '1deg' } },
+      { x: '25.0%', y: '72.0%', w: '18%', r: '2deg',  ar: '1 / 1', z: 7 },
+      { x: '44.0%', y: '74.0%', w: '17%', r: '-3deg', ar: '4 / 5', z: 8 },
+      { x: '63.0%', y: '71.0%', w: '18%', r: '3deg',  ar: '4 / 5', z: 9 }
     ]
   };
 
@@ -1105,18 +1177,26 @@
         { kind: 'flower', x: '96%', y: '78%', w: '4.5%', r: '12deg' }],
     6: [{ kind: 'flower', x: '44%', y: '10%', w: '4.5%', r: '-8deg' },
         { kind: 'heart',  x: '25%', y: '30%', w: '5%',  r: '9deg' },
-        { kind: 'flower', x: '97%', y: '76%', w: '4.5%', r: '12deg' }]
+        { kind: 'flower', x: '97%', y: '76%', w: '4.5%', r: '12deg' }],
+    7: [{ kind: 'flower', x: '46%', y: '9%',  w: '4.5%', r: '-8deg' },
+        { kind: 'heart',  x: '7%',  y: '17%', w: '5%',   r: '9deg' },
+        { kind: 'flower', x: '97%', y: '80%', w: '4.5%', r: '12deg' }],
+    8: [{ kind: 'flower', x: '45%', y: '8%',  w: '4.2%', r: '-8deg' },
+        { kind: 'heart',  x: '6%',  y: '14%', w: '4.8%', r: '9deg' },
+        { kind: 'flower', x: '97%', y: '82%', w: '4.2%', r: '12deg' }]
   };
 
   var GALLERY_FALLBACK = {
-    title: 'little moments with you:',
+    title: 'כי חשבתי שהן מצחיקות',
     photos: [
-      { src: 'assets/img/photos/web/sea.jpg',       alt: '', note: 'my favorite day' },
-      { src: 'assets/img/photos/web/ice-cream.jpg', alt: '', note: '' },
-      { src: 'assets/img/photos/web/flowers.jpg',   alt: '', note: 'best memory' },
-      { src: 'assets/img/photos/web/kItttty.jpg',   alt: '', note: 'look how cute' },
-      { src: 'assets/img/photos/web/pancake.jpg',   alt: '', note: '' },
-      { src: 'assets/img/photos/web/pink-bike.jpg', alt: '', note: 'love you always' }
+      { src: 'assets/img/photos/sonia-face.jpg',     alt: '', ar: '5 / 4', note: '' },
+      { src: 'assets/img/photos/sonia-pray.jpg',     alt: '', ar: '4 / 5', note: '' },
+      { src: 'assets/img/photos/sonia-funny-up.jpg', alt: '', ar: '4 / 5', note: '' },
+      { src: 'assets/img/photos/sonia-cake.jpg',     alt: '', ar: '4 / 5', note: '' },
+      { src: 'assets/img/photos/sonia-deer.jpg',     alt: '', ar: '3 / 4', note: '' },
+      { src: 'assets/img/photos/sonia-pizza.jpg',    alt: '', ar: '1 / 1', note: '' },
+      { src: 'assets/img/photos/sonia-pose.jpg',     alt: '', ar: '4 / 5', note: '' },
+      { src: 'assets/img/photos/sonia-car.jpg',      alt: '', ar: '4 / 5', note: '' }
     ]
   };
 
@@ -1186,6 +1266,16 @@
       img.style.setProperty('--ar', photo.ar || spot.ar);
 
       btn.appendChild(img);
+
+      // the same words, shown in the print's lower lip while hovered
+      if (photo.note) {
+        btn.classList.add('has-cap');
+        var cap = document.createElement('span');
+        cap.className = 'shot-cap';
+        cap.textContent = photo.note;
+        btn.appendChild(cap);
+      }
+
       btn.addEventListener('click', function () { openShot(photo); });
       frag.appendChild(btn);
 
@@ -1207,7 +1297,9 @@
     // and the paper stickers
     (STICKERS[photos.length] || []).forEach(function (k, n) {
       var el = document.createElement('span');
-      el.className = 'gal-sticker';
+      /* numbered so a narrow screen, which lays the prints out in a
+         column instead of a pile, can put them somewhere of its own */
+      el.className = 'gal-sticker gal-sticker--' + n;
       el.setAttribute('aria-hidden', 'true');
       el.style.cssText =
         '--kx:' + k.x + ';--ky:' + k.y + ';--kw:' + k.w +
@@ -1237,6 +1329,18 @@
   var currentPanel = null;
   var panelBusy = false;
 
+  /* Blooms carried off the edge by the opening cannot be seen, and the
+     painted underlayer still covers everything behind them, so they are
+     taken out of the compositor once they have settled. */
+  function retireOffscreen() {
+    lifted.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.right < -40 || r.left > vw + 40 || r.bottom < -40 || r.top > vh + 40) {
+        el.style.visibility = 'hidden';
+      }
+    });
+  }
+
   /* Leaving the note, the flowers carry on outward until they are off the
      screen altogether, and only then is the bed taken away. Cutting it
      mid-frame looked like the flowers had simply been switched off. */
@@ -1255,6 +1359,7 @@
 
     items.forEach(function (it) {
       var el = it.el, r = it.r;
+      el.style.visibility = '';          // anything retired earlier is back
       var bx = r.left + r.width / 2, by = r.top + r.height / 2;
       var dx = bx - cx, dy = by - cy;
       var d = Math.hypot(dx, dy) || 1;
@@ -1292,6 +1397,9 @@
       el.classList.add('shown');
       el.classList.add('in');             // starts that page's entrance
 
+      // the new page is a different height, so the cue is re-asked
+      [0, 400, 1200].forEach(function (t) { setTimeout(updateScrollCue, t); });
+
       /* Once the entrance is over, drop the per-item stagger delays. They
          are only wanted for the arrival; left in place they also govern
          hover, which then took a second to answer and a second to let go. */
@@ -1301,7 +1409,7 @@
       if (!wantsBed) {
         // only once the last flower is off the screen
         setTimeout(function () {
-          noteBody.classList.remove('show-bed', 'decor-off');
+          noteBody.classList.remove('show-bed');
         }, 2000);
       }
     };
@@ -1331,6 +1439,12 @@
     panelBusy = true;
     prev.classList.remove('shown');
 
+    // the film does not carry on playing behind the page you left
+    if (prev.id === 'video') {
+      var leaving = document.getElementById('vidEl');
+      if (leaving) leaving.pause();
+    }
+
     /* The next page starts arriving at once, underneath the flowers, and
        the flowers sweep away to uncover it. Holding it back until they
        had gone made it a fade-in on an empty page, not a reveal. */
@@ -1345,8 +1459,13 @@
 
   function resetPanels() {
     panelBusy = false;
+    if (scrollCue) scrollCue.classList.remove('show');
+
+    var film = document.getElementById('vidEl');
+    if (film) { film.pause(); film.currentTime = 0; }
+
     noteBody.classList.remove('show-bed', 'decor-off');
-    ['noteMain', 'gallery', 'closing'].forEach(function (id) {
+    ['noteMain', 'gallery', 'video', 'closing'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.classList.remove('current', 'shown', 'in', 'settled');
     });
@@ -1360,6 +1479,164 @@
     e.preventDefault();
     showPanel(btn.getAttribute('data-next'));
   });
+
+  /* --- the video, in its paper frame -----------------------------------
+     Native controls cannot be styled to match the rest of the card, so
+     the frame carries its own: a play toggle, a seek bar, the clock, a
+     mute and a full-screen button. The film itself stays a plain
+     <video>, so keyboard and screen readers get the real element. */
+
+  var vidFrame = document.getElementById('vidFrame');
+  var vidEl    = document.getElementById('vidEl');
+
+  if (vidFrame && vidEl) {
+    var vidBadge = document.getElementById('vidBadge');
+    var vidPlay  = document.getElementById('vidPlay');
+    var vidSeek  = document.getElementById('vidSeek');
+    var vidNow   = document.getElementById('vidNow');
+    var vidTotal = document.getElementById('vidTotal');
+    var vidMute  = document.getElementById('vidMute');
+    var vidFull  = document.getElementById('vidFull');
+    var scrubbing = false;
+
+    function clock(t) {
+      if (!isFinite(t) || t < 0) t = 0;
+      var m = Math.floor(t / 60), sec = Math.floor(t % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    /* The played part is painted into the track, so the fill and the knob
+       agree on both engines without a second element behind the input. */
+    function paintSeek(frac) {
+      vidSeek.style.setProperty('--played', (frac * 100).toFixed(2) + '%');
+    }
+
+    function toggle() {
+      if (vidEl.paused) { vidEl.play().catch(function () {}); }
+      else { vidEl.pause(); }
+    }
+
+    vidBadge.addEventListener('click', toggle);
+    vidPlay.addEventListener('click', toggle);
+
+    vidEl.addEventListener('click', toggle);
+
+    vidEl.addEventListener('play', function () {
+      vidFrame.classList.add('playing');
+      vidPlay.setAttribute('aria-label', 'Pause');
+    });
+
+    vidEl.addEventListener('pause', function () {
+      vidFrame.classList.remove('playing');
+      vidPlay.setAttribute('aria-label', 'Play');
+    });
+
+    /* The film's own proportions drive the frame, so a portrait or square
+       clip is not letterboxed into a widescreen box. */
+    function readMeta() {
+      if (vidEl.videoWidth && vidEl.videoHeight) {
+        vidFrame.style.setProperty('--vr', vidEl.videoWidth + ' / ' + vidEl.videoHeight);
+      }
+      vidTotal.textContent = clock(vidEl.duration);
+    }
+
+    vidEl.addEventListener('loadedmetadata', readMeta);
+
+    /* The film may already have its metadata by the time this runs, and
+       then the event has been and gone — so ask it directly as well. */
+    if (vidEl.readyState >= 1) readMeta();
+
+    vidEl.addEventListener('timeupdate', function () {
+      vidNow.textContent = clock(vidEl.currentTime);
+      if (scrubbing || !vidEl.duration) return;
+      var frac = vidEl.currentTime / vidEl.duration;
+      vidSeek.value = Math.round(frac * 1000);
+      paintSeek(frac);
+    });
+
+    // back to the start, badge and all, rather than resting on a black frame
+    vidEl.addEventListener('ended', function () {
+      vidEl.currentTime = 0;
+      vidSeek.value = 0;
+      paintSeek(0);
+    });
+
+    vidSeek.addEventListener('input', function () {
+      var frac = vidSeek.value / 1000;
+      paintSeek(frac);
+      if (vidEl.duration) vidNow.textContent = clock(frac * vidEl.duration);
+    });
+
+    /* Dragging only moves the film when the drag ends: seeking on every
+       frame of a scrub stutters badly on a long file. */
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      vidSeek.addEventListener(ev, function () { scrubbing = true; });
+    });
+
+    ['change', 'pointerup', 'keyup', 'blur'].forEach(function (ev) {
+      vidSeek.addEventListener(ev, function () {
+        if (!scrubbing) return;
+        scrubbing = false;
+        if (vidEl.duration) vidEl.currentTime = (vidSeek.value / 1000) * vidEl.duration;
+      });
+    });
+
+    vidMute.addEventListener('click', function () {
+      vidEl.muted = !vidEl.muted;
+    });
+
+    vidEl.addEventListener('volumechange', function () {
+      vidFrame.classList.toggle('muted', vidEl.muted || vidEl.volume === 0);
+      vidMute.setAttribute('aria-label', vidEl.muted ? 'Unmute' : 'Mute');
+    });
+
+    vidFull.addEventListener('click', function () {
+      /* iOS phones only ever give the video element itself a full screen,
+         so the frame is asked first and the film is the fallback. */
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      if (vidFrame.requestFullscreen) { vidFrame.requestFullscreen().catch(function () {}); }
+      else if (vidEl.webkitEnterFullscreen) { vidEl.webkitEnterFullscreen(); }
+    });
+
+    paintSeek(0);
+  }
+
+  /* --- the scroll cue ---------------------------------------------------
+     A page taller than the window gets a small arrow at the foot of the
+     screen, which goes once there is nothing left below. It is only ever
+     shown on a narrow screen; the CSS decides that. */
+
+  var scrollCue = document.getElementById('scrollCue');
+
+  function updateScrollCue() {
+    if (!scrollCue) return;
+    var p = currentPanel;
+    /* a couple of pixels of slack: sub-pixel layout means the numbers
+       rarely meet exactly at the bottom */
+    var left = p ? p.scrollHeight - p.scrollTop - p.clientHeight : 0;
+    scrollCue.classList.toggle('show', left > 24);
+  }
+
+  if (scrollCue) {
+    // scroll does not bubble, so it is caught on the way down instead
+    document.addEventListener('scroll', updateScrollCue, true);
+    window.addEventListener('resize', updateScrollCue);
+
+    scrollCue.addEventListener('click', function () {
+      if (!currentPanel) return;
+      currentPanel.scrollBy({ top: currentPanel.clientHeight * 0.8, behavior: 'smooth' });
+    });
+
+    /* The photographs arrive after the page does, and each one makes it
+       taller, so the answer has to be asked for again as they land. */
+    if (window.ResizeObserver) {
+      var cueWatch = new ResizeObserver(updateScrollCue);
+      ['shots', 'vidFrame', 'noteText'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) cueWatch.observe(el);
+      });
+    }
+  }
 
   /* --- one photo, opened large ---------------------------------------- */
 

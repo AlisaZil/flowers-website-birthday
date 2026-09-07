@@ -1,11 +1,53 @@
 {
-  "title": "little moments with you:",
+  "title": "כי חשבתי שהן מצחיקות",
   "photos": [
-    { "src": "assets/img/photos/web/sea.jpg",       "alt": "the sea at sunset",            "note": "my favorite day" },
-    { "src": "assets/img/photos/web/ice-cream.jpg", "alt": "two ice creams held up",       "note": "" },
-    { "src": "assets/img/photos/web/flowers.jpg",   "alt": "a bouquet of pink roses",      "note": "best memory" },
-    { "src": "assets/img/photos/web/kItttty.jpg",   "alt": "a cat asleep on a cushion",    "note": "look how cute" },
-    { "src": "assets/img/photos/web/pancake.jpg",   "alt": "pancakes with berries",        "note": "" },
-    { "src": "assets/img/photos/web/pink-bike.jpg", "alt": "a pink bicycle and flowers",   "note": "love you always" }
+    {
+      "src": "assets/img/photos/sonia-face.jpg",
+      "alt": "a close-up smile",
+      "ar": "5 / 4",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-pray.jpg",
+      "alt": "hands together, making a wish",
+      "ar": "4 / 5",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-funny-up.jpg",
+      "alt": "a silly look up at the camera",
+      "ar": "4 / 5",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-cake.jpg",
+      "alt": "a birthday cake",
+      "ar": "4 / 5",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-deer.jpg",
+      "alt": "meeting a deer",
+      "ar": "3 / 4",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-pizza.jpg",
+      "alt": "pizza, obviously",
+      "ar": "1 / 1",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-pose.jpg",
+      "alt": "posing for the camera",
+      "ar": "4 / 5",
+      "note": ""
+    },
+    {
+      "src": "assets/img/photos/sonia-car.jpg",
+      "alt": "a ride together",
+      "ar": "4 / 5",
+      "note": ""
+    }
   ]
 }
