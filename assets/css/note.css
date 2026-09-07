@@ -17,7 +17,9 @@
 
   position: fixed;
   inset: 0;
-  height: 100lvh;             /* full bleed, like the flowers behind it */
+  /* svh for the same reason as the first screen: lvh runs past what a
+     phone shows, which pushed each page's button below the fold. */
+  height: 100svh;
   /* No z-index of its own, so it makes no stacking context: it settles
      below the live bed (z-index 1) while the buttons inside it can still
      lift above the flowers. Layering runs

@@ -719,9 +719,9 @@
 }
 
 @media (max-width: 780px) {
-  /* two corners only, or they crowd the column of prints */
-  /* both across the top; the bottom-left one is behind the first print */
-  .gal-side img:nth-child(3) { display: none; }
+  /* All four: two across the top, two at the foot of the page — the
+     layer they sit on is stretched to the full scroll height in script,
+     so the lower pair lands at the end rather than at the fold. */
   /* larger, so they still read as a frame on a narrow screen */
   .gal-side img { width: calc(var(--gw) * 1.9); }
 }
@@ -1108,4 +1108,142 @@
 @media (prefers-reduced-motion: reduce) {
   .scroll-cue { transition-duration: .01ms; }
   .scroll-cue.show { animation: none; }
+}
+
+
+/* ------------------------------------------------------------------
+   The gift on the last page. Three presses: the first two rock it,
+   the third bursts it open in a shower of petals.
+   ------------------------------------------------------------------ */
+
+.gift-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* room for the petals to fly without the page having to grow */
+  width: min(420px, 64vmin);
+  height: min(420px, 64vmin);
+}
+
+.gift {
+  position: relative;
+  grid-area: 1 / 1;            /* shares the square with the message */
+  z-index: 2;
+  width: min(260px, 40vmin);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* the rocking runs off this, so the resting size stays here */
+  transform-origin: 50% 88%;
+  transition: transform .3s cubic-bezier(.25, .8, .35, 1),
+              opacity .35s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gift img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 22px rgba(150, 92, 112, .3));
+  pointer-events: none;
+  user-select: none;
+}
+
+.gift:hover { transform: scale(1.04); }
+.gift:focus-visible { outline: 3px solid var(--bub-dark, #8E2C45); outline-offset: 8px; border-radius: 14px; }
+
+/* one press: a knock, and it settles a little bigger than before */
+.gift.knock { animation: gift-knock .42s cubic-bezier(.36, .07, .19, .97); }
+
+@keyframes gift-knock {
+  0%        { transform: rotate(0deg) scale(1); }
+  22%       { transform: rotate(-7deg) scale(1.07); }
+  45%       { transform: rotate(6deg)  scale(1.05); }
+  68%       { transform: rotate(-3.5deg) scale(1.03); }
+  100%      { transform: rotate(0deg) scale(1); }
+}
+
+/* the third: it swells, then goes */
+.gift.pop { animation: gift-pop .5s cubic-bezier(.22, 1, .36, 1) forwards; }
+
+@keyframes gift-pop {
+  0%   { transform: scale(1); opacity: 1; }
+  35%  { transform: scale(1.28) rotate(-4deg); opacity: 1; }
+  100% { transform: scale(.35) rotate(8deg); opacity: 0; }
+}
+
+/* --- the petals thrown out ------------------------------------------- */
+
+.gift-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.petal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--pw, 30px);
+  height: var(--pw, 30px);
+  margin: calc(var(--pw, 30px) / -2);
+  /* --px/--py are where it ends up, set per petal when it is made */
+  animation: petal-fly var(--pt, 1100ms) cubic-bezier(.15, .7, .3, 1) forwards;
+  animation-delay: var(--pd, 0ms);
+  opacity: 0;
+}
+
+.petal svg { width: 100%; height: 100%; display: block; }
+
+@keyframes petal-fly {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(.3); opacity: 0; }
+  12%  { opacity: 1; }
+  /* out fast, then it falls the last of the way */
+  70%  { transform: translate(var(--px), var(--py)) rotate(var(--pr)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--px), calc(var(--py) + 46px)) rotate(var(--pr)) scale(.9); opacity: 0; }
+}
+
+/* --- the words under it ----------------------------------------------- */
+
+.gift-hint {
+  margin: clamp(6px, 1.6vmin, 16px) 0 0;
+  color: var(--bub-dark, #8E2C45);
+  font-size: clamp(16px, 2.6vmin, 26px);
+  font-weight: 700;
+  letter-spacing: .03em;
+  opacity: .78;
+  transition: opacity .3s ease;
+}
+
+.gift-hint.gone { opacity: 0; }
+/* it fades rather than going, so the button below it stays put */
+
+.gift-reveal {
+  grid-area: 1 / 1;            /* right where the gift stood */
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .6s ease, transform .6s cubic-bezier(.22, 1, .36, 1);
+}
+
+.gift-reveal[hidden] { display: none; }
+.gift-reveal.in { opacity: 1; transform: none; }
+
+/* the gift and its hint step aside, and the message takes the room */
+.closing-inner.opened .gift-stage {
+  /* held, not removed, so the page does not jump as the petals finish */
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift, .gift-hint, .gift-reveal { transition-duration: .01ms; }
+  .gift.knock, .gift.pop { animation-duration: .01ms; }
+  .petal { display: none; }
 }

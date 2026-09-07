@@ -1146,23 +1146,23 @@
       { x: '83.7%', y: '56.5%', w: '20%', r: '2deg',  ar: '4 / 5', z: 5, note: { x: '82.0%', y: '93.2%', r: '1deg' } }
     ],
     7: [
-      { x: '17.0%', y: '42.0%', w: '20%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '12.0%', y: '78.0%', r: '-2deg' } },
-      { x: '35.0%', y: '30.0%', w: '19%', r: '3deg',  ar: '4 / 5', z: 5 },
-      { x: '52.5%', y: '36.0%', w: '20%', r: '-2deg', ar: '4 / 5', z: 4 },
-      { x: '71.0%', y: '28.0%', w: '19%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '87.0%', y: '9.0%', r: '2deg', dark: true } },
-      { x: '87.0%', y: '44.0%', w: '19%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '88.0%', y: '87.0%', r: '1deg' } },
-      { x: '29.0%', y: '71.0%', w: '20%', r: '2deg',  ar: '5 / 4', z: 7 },
-      { x: '54.0%', y: '72.0%', w: '19%', r: '-3deg', ar: '4 / 5', z: 8 }
+      { x: '17.0%', y: '42.0%', w: '26.0%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '12.0%', y: '78.0%', r: '-2deg' } },
+      { x: '35.0%', y: '30.0%', w: '24.7%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '52.5%', y: '36.0%', w: '26.0%', r: '-2deg', ar: '4 / 5', z: 4 },
+      { x: '71.0%', y: '28.0%', w: '24.7%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '87.0%', y: '9.0%', r: '2deg', dark: true } },
+      { x: '87.0%', y: '44.0%', w: '24.7%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '88.0%', y: '87.0%', r: '1deg' } },
+      { x: '29.0%', y: '71.0%', w: '26.0%', r: '2deg',  ar: '5 / 4', z: 7 },
+      { x: '54.0%', y: '72.0%', w: '24.7%', r: '-3deg', ar: '4 / 5', z: 8 }
     ],
     8: [
-      { x: '16.0%', y: '42.0%', w: '18%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '11.5%', y: '78.0%', r: '-2deg' } },
-      { x: '33.0%', y: '30.0%', w: '17%', r: '3deg',  ar: '4 / 5', z: 5 },
-      { x: '50.5%', y: '36.0%', w: '18%', r: '-2deg', ar: '4 / 5', z: 4 },
-      { x: '68.0%', y: '28.0%', w: '17%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '84.5%', y: '9.0%', r: '2deg', dark: true } },
-      { x: '85.0%', y: '44.0%', w: '17%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '86.0%', y: '87.0%', r: '1deg' } },
-      { x: '25.0%', y: '72.0%', w: '18%', r: '2deg',  ar: '1 / 1', z: 7 },
-      { x: '44.0%', y: '74.0%', w: '17%', r: '-3deg', ar: '4 / 5', z: 8 },
-      { x: '63.0%', y: '71.0%', w: '18%', r: '3deg',  ar: '4 / 5', z: 9 }
+      { x: '16.0%', y: '42.0%', w: '23.4%', r: '-4deg', ar: '5 / 4', z: 3, note: { x: '11.5%', y: '78.0%', r: '-2deg' } },
+      { x: '33.0%', y: '30.0%', w: '22.1%', r: '3deg',  ar: '4 / 5', z: 5 },
+      { x: '50.5%', y: '36.0%', w: '23.4%', r: '-2deg', ar: '4 / 5', z: 4 },
+      { x: '68.0%', y: '28.0%', w: '22.1%', r: '4deg',  ar: '4 / 5', z: 6, note: { x: '84.5%', y: '9.0%', r: '2deg', dark: true } },
+      { x: '85.0%', y: '44.0%', w: '22.1%', r: '-3deg', ar: '4 / 5', z: 5, note: { x: '86.0%', y: '87.0%', r: '1deg' } },
+      { x: '25.0%', y: '72.0%', w: '23.4%', r: '2deg',  ar: '1 / 1', z: 7 },
+      { x: '44.0%', y: '74.0%', w: '22.1%', r: '-3deg', ar: '4 / 5', z: 8 },
+      { x: '63.0%', y: '71.0%', w: '23.4%', r: '3deg',  ar: '4 / 5', z: 9 }
     ]
   };
 
@@ -1397,8 +1397,10 @@
       el.classList.add('shown');
       el.classList.add('in');             // starts that page's entrance
 
-      // the new page is a different height, so the cue is re-asked
-      [0, 400, 1200].forEach(function (t) { setTimeout(updateScrollCue, t); });
+      // the new page is a different height, so both are re-asked
+      [0, 400, 1200].forEach(function (t) {
+        setTimeout(function () { fitSideBlooms(); updateScrollCue(); }, t);
+      });
 
       /* Once the entrance is over, drop the per-item stagger delays. They
          are only wanted for the arrival; left in place they also govern
@@ -1463,6 +1465,7 @@
 
     var film = document.getElementById('vidEl');
     if (film) { film.pause(); film.currentTime = 0; }
+    if (window.__resetGift) window.__resetGift();
 
     noteBody.classList.remove('show-bed', 'decor-off');
     ['noteMain', 'gallery', 'video', 'closing'].forEach(function (id) {
@@ -1601,12 +1604,136 @@
     paintSeek(0);
   }
 
+  /* --- the gift on the last page ----------------------------------------
+     Three presses. The first two knock it about; the third bursts it in a
+     shower of petals, and what is inside takes its place. */
+
+  var giftEl = document.getElementById('gift');
+
+  /* A scope of its own: `var` inside a bare block hoists all the way out
+     to this file's one big closure, where `opened` already means "the bed
+     has opened". The gift was reading that flag and thought it had been
+     unwrapped before it was ever pressed. */
+  if (giftEl) (function () {
+    var giftInner  = giftEl.closest('.closing-inner');
+    var giftBurst  = document.getElementById('giftBurst');
+    var giftHint   = document.getElementById('giftHint');
+    var giftReveal = document.getElementById('giftReveal');
+    var PRESSES_TO_OPEN = 3;
+    var presses = 0;
+    var giftOpen = false;
+
+    /* what the hint says with each press still to come */
+    var HINTS = ['לחצי על המתנה', 'עוד לחיצה...', 'עוד אחת!'];
+
+    function throwPetals() {
+      if (!giftBurst) return;
+      if (window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var COUNT = 16;
+      var reach = giftBurst.offsetWidth / 2;
+
+      for (var i = 0; i < COUNT; i++) {
+        var el = document.createElement('span');
+        el.className = 'petal';
+
+        /* spread around the circle with a little scatter, so it reads as a
+           burst rather than a clock face */
+        var a = (i / COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+        var d = reach * (0.55 + Math.random() * 0.5);
+        var w = 20 + Math.random() * 22;
+
+        el.style.cssText =
+          '--px:' + Math.round(Math.cos(a) * d) + 'px;' +
+          '--py:' + Math.round(Math.sin(a) * d) + 'px;' +
+          '--pr:' + Math.round((Math.random() - 0.5) * 540) + 'deg;' +
+          '--pw:' + Math.round(w) + 'px;' +
+          '--pt:' + Math.round(900 + Math.random() * 500) + 'ms;' +
+          '--pd:' + Math.round(Math.random() * 130) + 'ms;';
+
+        // mostly blooms, with a few hearts among them
+        el.innerHTML = (i % 4 === 1) ? HEART_STICKER : FLOWER_STICKER;
+        giftBurst.appendChild(el);
+      }
+
+      // taken away once they have all landed
+      setTimeout(function () { giftBurst.textContent = ''; }, 1800);
+    }
+
+    function openGift() {
+      giftOpen = true;
+      giftEl.classList.remove('knock');
+      void giftEl.offsetWidth;              // let the knock clear first
+      giftEl.classList.add('pop');
+      giftEl.disabled = true;
+      if (giftInner) giftInner.classList.add('opened');
+      if (giftHint) giftHint.classList.add('gone');
+
+      throwPetals();
+
+      /* the message arrives as the gift is going, not after it has gone —
+         waiting for the petals left a beat of empty screen */
+      setTimeout(function () {
+        if (!giftReveal) return;
+        giftReveal.hidden = false;
+        void giftReveal.offsetHeight;
+        giftReveal.classList.add('in');
+      }, 380);
+    }
+
+    giftEl.addEventListener('click', function () {
+      if (giftOpen) return;
+      presses++;
+
+      if (presses >= PRESSES_TO_OPEN) { openGift(); return; }
+
+      giftEl.classList.remove('knock');
+      void giftEl.offsetWidth;              // so a fast second press replays it
+      giftEl.classList.add('knock');
+      if (giftHint) giftHint.textContent = HINTS[presses] || HINTS[0];
+    });
+
+    giftEl.addEventListener('animationend', function (e) {
+      if (e.animationName === 'gift-knock') giftEl.classList.remove('knock');
+    });
+
+    /* wrapped up again for the next visit */
+    var resetGift = function () {
+      presses = 0;
+      giftOpen = false;
+      giftEl.disabled = false;
+      giftEl.classList.remove('knock', 'pop');
+      if (giftInner) giftInner.classList.remove('opened');
+      if (giftHint) { giftHint.classList.remove('gone'); giftHint.textContent = HINTS[0]; }
+      if (giftBurst) giftBurst.textContent = '';
+      if (giftReveal) { giftReveal.classList.remove('in'); giftReveal.hidden = true; }
+    };
+    window.__resetGift = resetGift;
+  })();
+
   /* --- the scroll cue ---------------------------------------------------
      A page taller than the window gets a small arrow at the foot of the
      screen, which goes once there is nothing left below. It is only ever
      shown on a narrow screen; the CSS decides that. */
 
   var scrollCue = document.getElementById('scrollCue');
+
+  /* The blooms sit on a layer pinned to the panel's edges. A panel that
+     scrolls is taller than that layer, so the lower pair hung at the foot
+     of the *window* and slid away as you went down. Giving the layer the
+     panel's full scrolling height puts them at the foot of the page. */
+  function fitSideBlooms() {
+    var panels = document.querySelectorAll('.gallery-panel, .video-panel');
+    [].forEach.call(panels, function (panel) {
+      var side = panel.querySelector('.gal-side');
+      if (!side) return;
+      var scrolls = panel.scrollHeight > panel.clientHeight + 1;
+      /* With top, bottom and height all set, the bottom is the one that
+         gives way, so the layer grows downwards over the whole page. */
+      side.style.height = scrolls ? panel.scrollHeight + 'px' : '';
+    });
+  }
 
   function updateScrollCue() {
     if (!scrollCue) return;
@@ -1620,7 +1747,10 @@
   if (scrollCue) {
     // scroll does not bubble, so it is caught on the way down instead
     document.addEventListener('scroll', updateScrollCue, true);
-    window.addEventListener('resize', updateScrollCue);
+    window.addEventListener('resize', function () {
+      fitSideBlooms();
+      updateScrollCue();
+    });
 
     scrollCue.addEventListener('click', function () {
       if (!currentPanel) return;
@@ -1630,7 +1760,10 @@
     /* The photographs arrive after the page does, and each one makes it
        taller, so the answer has to be asked for again as they land. */
     if (window.ResizeObserver) {
-      var cueWatch = new ResizeObserver(updateScrollCue);
+      var cueWatch = new ResizeObserver(function () {
+        fitSideBlooms();
+        updateScrollCue();
+      });
       ['shots', 'vidFrame', 'noteText'].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) cueWatch.observe(el);

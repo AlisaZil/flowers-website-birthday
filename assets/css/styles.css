@@ -107,12 +107,14 @@ body {
   /* the first panel of a continuous page, not an overlay */
   position: relative;
   width: 100%;
-  /* lvh is the viewport with the browser chrome retracted, so the flowers
-     carry on behind the status bar and the toolbar instead of stopping at
-     a cream strip. It is also stable while iOS collapses its toolbar,
-     where dvh would reflow the whole bed mid-scroll. */
+  /* svh is the viewport with the browser chrome *shown* — the smallest it
+     ever gets. lvh (chrome retracted) is taller than what a phone actually
+     shows, so the first screen ran past the fold and the page scrolled,
+     letting the next section peek in underneath. svh is just as stable as
+     lvh while iOS collapses its toolbar — unlike dvh, which would reflow
+     the whole bed mid-scroll — and it can never overflow. */
   height: 100vh;
-  height: 100lvh;
+  height: 100svh;
   overflow: hidden;
   /* the flowers fade up out of this, straight from the loading screen */
   background: #FAE7E7;

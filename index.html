@@ -336,11 +336,26 @@
   <!-- the last word, and the way home -->
   <section class="panel closing-panel" id="closing">
     <div class="closing-inner">
-      <p class="closing-line">that is all of them, for now.</p>
 
-      <svg class="closing-heart" viewBox="0 0 32 29" aria-hidden="true"><use href="#hrt"/></svg>
+      <!-- the gift: three presses and it goes off -->
+      <div class="gift-stage" id="giftStage">
+        <button class="gift" id="gift" type="button" aria-label="פתחי את המתנה">
+          <img src="assets/img/ui/pink-gift-transparent.png" alt="" draggable="false">
+        </button>
+        <!-- the petals thrown out on the third press land here -->
+        <div class="gift-burst" id="giftBurst" aria-hidden="true"></div>
 
-      <p class="closing-sub">happy birthday, again &#9829;</p>
+        <!-- What is inside. It shares the gift's own square, so the words
+             arrive where the box was rather than under the gap it leaves. -->
+        <div class="gift-reveal" id="giftReveal" hidden>
+          <!-- ":P" is left-to-right; loose in an RTL line it came out "P:" -->
+          <p class="closing-line" dir="rtl">את המתנות ולר כבר אמר לך <span dir="ltr">:P</span></p>
+          <svg class="closing-heart" viewBox="0 0 32 29" aria-hidden="true"><use href="#hrt"/></svg>
+          <p class="closing-sub" dir="rtl">יום הולדת שמח &#9829;</p>
+        </div>
+      </div>
+
+      <p class="gift-hint" id="giftHint" dir="rtl">לחצי על המתנה</p>
 
       <button class="closing-btn" id="backBtn" type="button">
         <svg class="closing-btn-icon" viewBox="0 0 16 18" aria-hidden="true">
